@@ -1,4 +1,4 @@
-# MySkills
+# team-development-skills
 
 Bộ AI skill packages cho Claude Code, hỗ trợ phân tích yêu cầu phần mềm và mô phỏng quy trình phát triển theo team.
 
