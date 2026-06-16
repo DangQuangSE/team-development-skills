@@ -7,7 +7,7 @@ description: >
   Part of the Virtual Team Skill pipeline.
 user-invocable: true
 metadata:
-  input: Requirement text inline, or --srs flag to read from projects/{slug}/spec.md
+  input: Requirement text + --level {level} (required) + optional --project {slug} + optional --srs
   output: projects/{slug}/team/ba/ (4 artifact files)
   next: /team-techlead
 ---
@@ -25,8 +25,52 @@ Your responsibilities: analyze requirements, write user stories in "As a / I wan
 Parse from the command arguments:
 
 - **`--project {slug}`** — project identifier. If not provided, use the current working directory name as the slug. Confirm: output `"Using project slug: {slug}. Continue? (y/n)"` and wait for operator confirmation before proceeding.
+- **`--level {level}`** — project depth level. Valid values: `fresh` | `junior` | `mid` | `senior`. Required. If not provided, ask: `"Choose a project level: fresh | junior | mid | senior"` and wait for reply.
 - **`--context "{text or path}"`** — extra context. If the value starts with `./` or `/`, use the Read tool to read it as a file. Otherwise treat as inline text. Prepend to your analysis; do NOT write it to any artifact file.
 - **`--srs`** — read SRS workflow artifacts as primary requirement input instead of free-text.
+
+---
+
+## Step 0.5 — Level Calibration
+
+Use the Read tool: `projects/{slug}/team/.project-config.md`
+
+**If file exists:** extract the `**level:**` field from `## Project`. Use that level (ignore `--level` arg if different — config is authoritative).
+
+**If file does NOT exist** (standalone BA run): write it now using the `--level` value provided in Step 0:
+
+```markdown
+# Project Configuration — {slug}
+
+## Project
+**slug:** {slug}
+**level:** {fresh|junior|mid|senior}
+**set-at:** {ISO 8601 UTC}
+**set-by:** /team-ba standalone
+
+## Level Profile
+**label:** {School project (Fresher) | Graduation thesis (Junior+) | Production — Mid | Production — Senior}
+**architecture-style:** {Monolith MVC | Layered MVC (Controller-Service-Repo) | Clean/Hexagonal | DDD Clean Architecture}
+**task-granularity:** {≤ 4h · SP ×2.5 · 60% sprint | ≤ 8h · SP ×1.5 · 85% sprint | feature-level · SP ×1.0 · 100% sprint | epic-level · SP ×0.75 · 110% sprint}
+**test-coverage-target:** {best-effort (no minimum) | ≥ 60% line coverage | ≥ 70% line coverage | ≥ 80% + mutation testing}
+**qa-standard:** {basic | standard | strict | enterprise}
+```
+
+Fill the `{...}` placeholders with the correct value for the chosen level.
+
+**BA quality is ALWAYS senior — level is noted for context only.**
+
+BA operates at full professional depth regardless of `--level`. Every project, whether a school assignment or enterprise system, needs complete, unambiguous requirements — because downstream agents have no other source of truth.
+
+**Always apply regardless of level:**
+- AC scenarios per story: **≥ 4** (happy path + error/rejection + boundary + edge case)
+- Story scope: **all stories** derived from requirements (Essential + Conditional + Optional where identifiable)
+- Business rules: **full coverage** — validation + access control + data integrity + workflow sequencing
+- Gap flagging: **all issues** — do not suppress gaps because the project is "small"
+
+The level affects how the *implementation team* will execute, not how thoroughly BA defines the requirements.
+
+Output: `[BA] ✓ Level noted: {level} | BA quality: senior (fixed)`
 
 ---
 
@@ -47,9 +91,28 @@ Parse from the command arguments:
 
 ---
 
-## Step 2 — Requirements Analysis
+## Step 2 — Pre-Analysis: Deep Requirements Thinking
 
-Before writing any files, perform a complete BA analysis mentally:
+**Do not write any files yet.** Think exhaustively first. No output — internal reasoning only.
+
+Work through ALL of the following before forming any conclusions:
+
+1. **Hidden actors** — beyond what is explicitly stated, who else interacts with or is affected by this system? (admins, auditors, third-party integrators, background jobs, external webhooks?)
+2. **Implicit requirements** — what is obviously needed but not stated? (e.g., if auth exists → password reset must exist; if file upload → file size limit; if payments → refund flow)
+3. **Domain constraints** — what regulatory, legal, or industry-specific rules apply to this domain that the requester may not have mentioned?
+4. **Existential requirements** — what are the 5 requirements that, if missing, make the system completely unusable for the primary actor? Verify each is covered.
+5. **Conflicts and ambiguities** — what statements in the input contradict each other or are too vague to derive a testable requirement? List every one. These become `## Conflicts Detected` or explicit assumptions.
+6. **Boundary conditions** — for each feature, what are the min/max/null/empty/overflow cases that define behavior at the edges?
+7. **Scope creep risk** — what will users assume is included that is NOT in the stated requirements? Explicitly exclude these in `## Out of Scope`.
+8. **What a real BA would escalate** — what would you flag to the product owner before sprint 1 starts? These become `## Assumptions` entries with explicit risk statements.
+
+Only proceed to Step 3 after exhausting this analysis.
+
+---
+
+## Step 3 — Requirements Analysis
+
+Before writing any files, synthesize your pre-analysis into conclusions:
 
 1. **Problem domain** — what problem is being solved, for whom, why
 2. **Actors** — identify every user role and external system; note technical proficiency and data access level
@@ -61,7 +124,7 @@ Before writing any files, perform a complete BA analysis mentally:
 
 ---
 
-## Step 3 — Write Artifact Files
+## Step 4 — Write Artifact Files
 
 Write all 4 files completely. Do NOT use placeholders. Write each file in full before starting the next.
 
@@ -184,7 +247,7 @@ Cover: validation rules, access control rules, data integrity rules, workflow se
 
 ---
 
-## Step 4 — Layer 1 Validation
+## Step 5 — Layer 1 Validation
 
 After writing all 4 files, validate structural completeness. Use the Read tool to re-read each file.
 
@@ -238,7 +301,7 @@ Action: run /team-ba --project {slug} to retry manually
 
 ---
 
-## Step 5 — Handoff
+## Step 6 — Handoff
 
 Output:
 

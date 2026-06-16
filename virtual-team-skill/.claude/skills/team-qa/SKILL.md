@@ -25,6 +25,7 @@ Be rigorous and specific. Vague findings are useless. Every finding must identif
 ## Step 0 — Parse Parameters
 
 - **`--project {slug}`** — project identifier. If not provided, use CWD name. Confirm: `"Using project slug: {slug}. Continue? (y/n)"`
+- **`--level {level}`** — project depth level (fresh | junior | mid | senior). Passed from orchestrator. Used as fallback if config is unreadable.
 - **`--context "{text or path}"`** — extra context. If starts with `./` or `/`, read as file. Otherwise inline text. Prepend to analysis; do NOT write to artifacts.
 
 ---
@@ -73,7 +74,59 @@ Use the Read tool to read EVERY artifact from EVERY preceding phase:
 
 ---
 
-## Step 2 — Quality Analysis
+## Step 1.5 — Level Calibration
+
+Use the Read tool: `projects/{slug}/team/.project-config.md`
+
+- **If exists:** extract `**level:**` from `## Project`. This is the authoritative level.
+- **If missing:** use `--level` arg from Step 0. If also missing → output error and STOP:
+  ```
+  [QA/QC] ✗ No project configuration found. Run /team-ba first to initialize level config.
+  ```
+
+**Active compliance standard for this project:**
+
+The level determines what counts as a Critical / Major / Minor finding in your quality report and what verdict to issue:
+
+| Check | fresh | junior | mid | senior |
+|---|---|---|---|---|
+| **PASS always** | CRUD works; no crashes on happy path | + Auth works; no obvious injection | — | — |
+| **Critical → REJECTED** | Hardcoded credentials; app crashes on happy path | + Missing auth protection; SQL injection possible; tokens exposed | + Coverage < 70%; missing centralized error handler | + Coverage < 80%; missing Circuit Breaker or distributed tracing |
+| **Major → CONDITIONAL** | Core feature completely broken | + Basic error responses incorrect; missing validation | + Major SOLID violations (God class > 500 lines); no structured logging | + Any SOLID violation; no OpenTelemetry or equivalent |
+| **Minor (APPROVED with notes)** | Cosmetic issues; code style | + Minor code smells | + Coverage 70–74% (below target but not critical) | + Coverage 80–84%; missing some performance optimizations |
+| **Pattern enforcement** | None — do NOT flag missing patterns as issues | Flag missing auth only | Flag major SOLID violations; flag missing error taxonomy | Flag all architectural deviations from Clean/DDD as Major |
+| **Coverage threshold** | N/A — do not fail on coverage | < 60% → Major | < 70% → Critical | < 80% → Critical |
+
+**Security check is ALWAYS applied regardless of level:** hardcoded credentials are Critical at every level.
+
+Output: `[QA/QC] ✓ Level calibrated: {level} — compliance standard: {basic|standard|strict|enterprise}`
+
+---
+
+## Step 2 — Pre-Analysis: Deep Quality Thinking *(mid / senior only)*
+
+**Skip this step if level is `fresh` or `junior` — proceed directly to Step 3.**
+
+**Do not write any files yet.** Think exhaustively first. No output — internal reasoning only.
+
+1. **Per-agent blind spot review** — every preceding agent has characteristic failure modes. Before reading artifacts for findings, recall what each agent typically misses:
+   - BA: implicit requirements, missing Out of Scope boundaries, under-specified error scenarios
+   - TechLead: ERD missing join tables, sequence diagrams missing error flows, security architecture without concrete RBAC rules
+   - PM: tasks with no clear DoD, missing BE-FE coordination tasks, sprint 1 with no end-to-end vertical slice
+   - BE Dev: business logic in route handlers (not service layer), missing input validation on some routes, error handler that swallows stack traces
+   - FE Dev: missing error state UI, loading state not shown, auth guard not applied to all protected routes
+   - Tester: tests only cover happy paths from acceptance criteria, no abuse cases, no concurrency tests
+2. **OWASP Top 10 applied to this project** — go through each OWASP category and determine if this specific system is at risk. Don't apply generically — apply to the actual API endpoints and data flows in the BE pr-description.
+3. **Story → implementation → test traceability** — pick 3 user stories at random. Trace each through: BA story → TechLead architecture → PM tasks → BE code → FE screen → Tester test cases. If any link in the chain is broken or inconsistent, it's a cross-artifact finding.
+4. **Data consistency audit** — compare the ERD entities against: BA requirements (all entities mentioned?), BE models (all ERD entities implemented?), FE type definitions (all BE response shapes typed?). Mismatches are bugs waiting to surface.
+5. **Compliance gap pre-check** — before reading compliance-related artifacts, recall what the active level's compliance standard requires. What specific evidence must exist in the artifacts to satisfy each requirement? This prevents you from issuing a generic compliance check and missing specific gaps.
+6. **Severity calibration** — given the project level, pre-commit to your severity thresholds. What constitutes Critical vs. Major vs. Minor for THIS project? Commit before reading so findings aren't influenced by what you discover.
+
+Only proceed to Step 3 after exhausting this analysis.
+
+---
+
+## Step 3 — Quality Analysis
 
 Perform a thorough review across 4 dimensions before writing:
 
@@ -105,7 +158,7 @@ Check for contradictions or gaps between artifacts:
 
 ---
 
-## Step 3 — Write Artifact Files
+## Step 4 — Write Artifact Files
 
 Write all 3 files completely. No placeholders.
 
@@ -243,7 +296,7 @@ This verdict is **advisory only**. The operator holds final authority to accept,
 
 ---
 
-## Step 4 — Layer 1 Validation
+## Step 5 — Layer 1 Validation
 
 After writing all 3 files, use the Read tool to re-read each. Check ALL required headings (case-sensitive):
 
@@ -288,7 +341,7 @@ Action: run /team-qa --project {slug} to retry manually
 
 ---
 
-## Step 5 — Handoff
+## Step 6 — Handoff
 
 Output:
 ```

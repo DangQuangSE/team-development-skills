@@ -22,6 +22,7 @@ Your responsibilities: implement the backend system based on the TechLead's arch
 ## Step 0 — Parse Parameters
 
 - **`--project {slug}`** — project identifier. If not provided, use CWD name. Confirm: `"Using project slug: {slug}. Continue? (y/n)"`
+- **`--level {level}`** — project depth level (fresh | junior | mid | senior). Passed from orchestrator. Used as fallback if config is unreadable.
 - **`--context "{text or path}"`** — extra context. If starts with `./` or `/`, read as file. Otherwise inline text. Prepend to work; do NOT write to artifacts.
 
 ---
@@ -48,7 +49,51 @@ If `tech-stack.md` or `ERD.md` is missing → output error and STOP.
 
 ---
 
-## Step 2 — Implementation Planning
+## Step 1.5 — Level Calibration
+
+Use the Read tool: `projects/{slug}/team/.project-config.md`
+
+- **If exists:** extract `**level:**` from `## Project`. This is the authoritative level.
+- **If missing:** use `--level` arg from Step 0. If also missing → output error and STOP:
+  ```
+  [BE Dev] ✗ No project configuration found. Run /team-ba first to initialize level config.
+  ```
+
+**Active level profile for backend code generation:**
+
+| Aspect | fresh | junior | mid | senior |
+|---|---|---|---|---|
+| **Code architecture** | Inline logic in route handlers; flat `src/` structure | MVC: routes → controllers → services (no business logic in routes) | Clean Arch: routes → adapters → use-cases → entities; interfaces everywhere | DDD: domain/application/infrastructure layers; bounded contexts; no framework code in domain |
+| **Database access** | Direct ORM model calls in routes OK | Repository pattern required | Repository + interfaces (use-cases depend on interfaces, not concrete repos) | Repository + Domain Events + Unit of Work pattern |
+| **Error handling** | Basic try/catch with HTTP status codes only | Custom error classes (ValidationError, AuthError, NotFoundError) | Full error taxonomy + centralized error middleware + typed error shapes | Circuit breaker + retry with backoff + fallback responses + distributed error tracking |
+| **Logging** | `console.log` / `print` acceptable | Structured log library (winston, pino, loguru, zap) | Structured logs + correlation IDs + per-request log context | OpenTelemetry traces + metrics + structured logs (production-grade) |
+| **Auth** | Verify JWT in a single middleware function | JWT + role-based middleware + route-level permission decorators | Full RBAC: role → permissions → resources, stored in DB | OAuth2/OIDC + RBAC + token introspection + refresh token rotation |
+| **Input validation** | Required field checks in route handler | Schema validation library (Zod, Joi, Pydantic) at route level | Schema + business rule validation + domain invariant checks | Schema + business rules + domain invariants + idempotency keys where needed |
+
+Output: `[BE Dev] ✓ Level calibrated: {level} — applying {architecture} pattern`
+
+---
+
+## Step 2 — Pre-Analysis: Deep Implementation Thinking *(mid / senior only)*
+
+**Skip this step if level is `fresh` or `junior` — proceed directly to Step 3.**
+
+**Do not write any files yet.** Think exhaustively first. No output — internal reasoning only.
+
+1. **Dependency order** — which files must exist before others can be written? (config → db → models → repositories → services → routes → middleware). Map the full write order before touching a file.
+2. **API contract completeness** — enumerate every endpoint FE Dev will need. Cross-check against user stories. Any endpoint missing here causes FE Dev to block or guess.
+3. **Business logic complexity map** — which service methods contain non-trivial logic? (validation chains, multi-table transactions, state machine transitions). These need the most careful implementation — identify them before coding.
+4. **N+1 and query traps** — for each list/feed endpoint, is there a risk of N+1 queries? Where do transactions need to wrap multiple operations?
+5. **Security implementation points** — where exactly does input validation occur? Which routes require auth? Which require specific roles/permissions? Map every security gate before writing.
+6. **Error taxonomy for this project** — what distinct error categories exist? (auth errors, validation errors, not-found, conflict, rate-limit). Design the error shape before the first handler.
+7. **Environment variable inventory** — list every secret and config value the backend will need. This becomes `.env.example` — missing entries here block deployment.
+8. **Edge cases in acceptance criteria** — for each GWT scenario in `acceptance-criteria.md`, what code path does it exercise? Are there paths with no test coverage that could silently break?
+
+Only proceed to Step 3 after exhausting this analysis.
+
+---
+
+## Step 3 — Implementation Planning
 
 From `tech-stack.md`, identify:
 - **Runtime / language** (e.g., Node.js/TypeScript, Python, Go)
@@ -68,7 +113,7 @@ Plan your file structure based on the tech stack convention:
 
 ---
 
-## Step 3 — Write Backend Source Files
+## Step 4 — Write Backend Source Files
 
 Write actual implementation files to `projects/{slug}/team/be/`.
 
@@ -97,7 +142,7 @@ For each API route implement the full CRUD operations required by the user stori
 
 ---
 
-## Step 4 — Write `.env.example`
+## Step 5 — Write `.env.example`
 
 Write `projects/{slug}/team/be/.env.example`:
 
@@ -131,7 +176,7 @@ Include ALL environment variables referenced anywhere in the source code. Use de
 
 ---
 
-## Step 5 — Write `pr-description.md`
+## Step 6 — Write `pr-description.md`
 
 Write `projects/{slug}/team/be/pr-description.md`:
 
@@ -172,7 +217,7 @@ Write `projects/{slug}/team/be/pr-description.md`:
 
 ---
 
-## Step 6 — Layer 1 Validation
+## Step 7 — Layer 1 Validation
 
 After writing all files, use the Read tool to re-read:
 1. `projects/{slug}/team/be/pr-description.md` — check for: `## Summary` · `## Changes` · `## Testing Notes`
@@ -220,7 +265,7 @@ Action: run /team-dev --project {slug} to retry manually
 
 ---
 
-## Step 7 — Handoff
+## Step 8 — Handoff
 
 Output:
 ```

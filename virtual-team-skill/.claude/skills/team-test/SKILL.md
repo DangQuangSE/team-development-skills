@@ -22,6 +22,7 @@ Your responsibilities: derive a comprehensive test plan from the user stories an
 ## Step 0 — Parse Parameters
 
 - **`--project {slug}`** — project identifier. If not provided, use CWD name. Confirm: `"Using project slug: {slug}. Continue? (y/n)"`
+- **`--level {level}`** — project depth level (fresh | junior | mid | senior). Passed from orchestrator. Used as fallback if config is unreadable.
 - **`--context "{text or path}"`** — extra context. If starts with `./` or `/`, read as file. Otherwise inline text. Prepend to analysis; do NOT write to artifacts.
 
 ---
@@ -52,7 +53,53 @@ Use the Read tool to read ALL preceding artifacts:
 
 ---
 
-## Step 2 — Test Analysis
+## Step 1.5 — Level Calibration
+
+Use the Read tool: `projects/{slug}/team/.project-config.md`
+
+- **If exists:** extract `**level:**` from `## Project`. This is the authoritative level.
+- **If missing:** use `--level` arg from Step 0. If also missing → output error and STOP:
+  ```
+  [Tester] ✗ No project configuration found. Run /team-ba first to initialize level config.
+  ```
+
+**Active level profile for test generation:**
+
+| Aspect | fresh | junior | mid | senior |
+|---|---|---|---|---|
+| **Coverage target** | Best-effort — no minimum stated in test plan | ≥ 60% line coverage for business logic modules | ≥ 70% line coverage overall | ≥ 80% line coverage + mutation testing (≥ 70% mutation score) |
+| **Unit tests scope** | Happy path for main service functions only | All service methods + all error/exception paths | All methods + boundary values + error paths + concurrency edge cases | + Property-based tests + mutation tests per critical function |
+| **Integration tests** | Not required (skip test-cases-integration.md placeholder only) | 2–3 API endpoint tests per resource (happy path + 1 error) | Full API contract — every endpoint × auth states × validation rules | Contract testing (Pact/OpenAPI) + database-level integration tests |
+| **E2E tests** | Not required (skeleton template only) | 1–2 critical user journeys (login + primary feature) | All Essential story journeys + 1 error journey per major feature | All journeys + visual regression notes + performance assertions |
+| **Mocking** | No mocking — call real objects or stubs | Basic mocking (`jest.mock`, `unittest.mock`, `testify/mock`) | Test factories + fixture builders + advanced mock patterns | Full test doubles (fakes, in-memory repos, contract stubs) |
+| **Gate 2 threshold** | Declare if happy paths covered | Declare if unit + integration written | Declare if full pyramid present AND coverage target met | Declare if all test types pass + performance assertions defined |
+
+Set the **Coverage target** section of `test-plan.md` to match the active level.
+
+Output: `[Tester] ✓ Level calibrated: {level} — coverage target: {n}% | test types: {list}`
+
+---
+
+## Step 2 — Pre-Analysis: Deep Test Thinking *(mid / senior only)*
+
+**Skip this step if level is `fresh` or `junior` — proceed directly to Step 3.**
+
+**Do not write any files yet.** Think exhaustively first. No output — internal reasoning only.
+
+1. **User journey state machine** — map every state the system can be in (unauthenticated, authenticated-no-data, authenticated-with-data, mid-transaction, error-state, rate-limited, session-expired). For each state: what user actions are valid? What should be blocked? What is the transition? Missing state coverage = silent bugs in production.
+2. **Equivalence partitioning per input** — for every user input field in the system: what are the equivalence classes? (valid/invalid, empty/null/whitespace, at-boundary/over-boundary, special characters/injection strings, Unicode/emoji). One test per class minimum.
+3. **Abuse cases — confused user** — what does a user do when lost or impatient? (double-click submit, browser back on a multi-step form, reload mid-payment, open the same form in two tabs simultaneously, paste a URL from a different account). Map each to an expected system behavior.
+4. **Abuse cases — malicious user** — what would an attacker attempt? (SQL injection in search, XSS in display names, IDOR by changing IDs in URLs/API calls, replay attacks on auth, mass-assignment via extra POST fields). Each needs at minimum one security test case.
+5. **Race conditions and concurrency** — which operations could produce incorrect results if two users do them simultaneously? (two users claim the last item in stock, two requests update the same record, session expires mid-operation). These are integration test cases, not unit.
+6. **Error recovery paths** — for every error state the system can enter, what is the recovery path? (token expired → refresh → retry, payment fails → state rollback → user notified, file upload interrupted → cleanup). Test that recovery actually works.
+7. **Data integrity scenarios** — what sequences of operations could leave the database in an inconsistent state? (create then partially update, delete referenced entity, cascade rules). Design integration tests that verify data consistency post-operation.
+8. **Coverage gap analysis** — after mapping all of the above, which acceptance criteria scenarios have NO corresponding test case yet? These are the mandatory additions.
+
+Only proceed to Step 3 after exhausting this analysis.
+
+---
+
+## Step 3 — Test Analysis
 
 Before writing files:
 
@@ -65,7 +112,7 @@ Before writing files:
 
 ---
 
-## Step 3 — Write Artifact Files
+## Step 4 — Write Artifact Files
 
 Write all 5 files completely. No placeholders. Write each in full before starting the next.
 
@@ -244,7 +291,7 @@ Cover: every Essential user story's happy path, critical error paths (invalid lo
 
 ---
 
-## Step 4 — Layer 1 Validation
+## Step 5 — Layer 1 Validation
 
 After writing all 5 files, use the Read tool to re-read each one. Check ALL required headings (case-sensitive):
 
@@ -291,7 +338,7 @@ Action: run /team-test --project {slug} to retry manually
 
 ---
 
-## Step 5 — Handoff
+## Step 6 — Handoff
 
 Output:
 ```

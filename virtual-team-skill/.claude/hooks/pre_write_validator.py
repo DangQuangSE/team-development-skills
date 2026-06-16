@@ -125,6 +125,10 @@ HEADING_SCHEMA = {
         "## Findings",
         "## Conditions",
     ],
+    "team/.project-config.md": [
+        "## Project",
+        "## Level Profile",
+    ],
 }
 
 # ADR files match pattern: team/techlead/ADR-NNN.md

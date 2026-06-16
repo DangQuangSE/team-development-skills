@@ -7,7 +7,7 @@ description: >
   Use per-agent commands (/team-ba, /team-techlead, etc.) for manual control.
 user-invocable: true
 metadata:
-  input: Requirement text + optional --project {slug} + optional --context + optional --srs
+  input: Requirement text + --level {level} (required) + optional --project {slug} + optional --context + optional --srs
   output: projects/{slug}/team/ (complete artifact set from all 7 phases)
   next: Review projects/{slug}/team/qa/sign-off.md for verdict
 ---
@@ -26,8 +26,41 @@ Parse from the command:
 
 - **`"{requirement text}"`** — the operator's requirement. Required unless `--srs` is used.
 - **`--project {slug}`** — project identifier. If not provided, use the current working directory name. Confirm: `"Using project slug: {slug}. Continue? (y/n)"` and wait for operator reply.
+- **`--level {level}`** — **REQUIRED.** Project depth level. Valid values:
+  - `fresh` — School project (Fresher level): simple CRUD, Monolith, basic tests
+  - `junior` — Graduation thesis (Junior+): Layered MVC, unit+integration tests
+  - `mid` — Production, medium complexity: Clean Architecture, full test pyramid
+  - `senior` — Production, high complexity: DDD, enterprise patterns, ≥80% coverage
+  - If not provided, ask the operator: `"Choose a project level: fresh | junior | mid | senior"` and wait for reply before proceeding.
 - **`--context "{text or path}"`** — extra context to forward to the BA agent. If starts with `./` or `/`, read as file. Otherwise inline text.
 - **`--srs`** — forward to BA agent: read SRS workflow artifacts as primary input.
+
+---
+
+## Step 0.5 — Write Project Configuration
+
+Before calling any agent, write `projects/{slug}/team/.project-config.md`:
+
+```markdown
+# Project Configuration — {slug}
+
+## Project
+**slug:** {slug}
+**level:** {fresh|junior|mid|senior}
+**set-at:** {ISO 8601 UTC}
+**set-by:** /team orchestrator
+
+## Level Profile
+**label:** {School project (Fresher) | Graduation thesis (Junior+) | Production — Mid | Production — Senior}
+**architecture-style:** {Monolith MVC | Layered MVC (Controller-Service-Repo) | Clean/Hexagonal | DDD Clean Architecture}
+**task-granularity:** {≤ 4h · SP ×2.5 · 60% sprint | ≤ 8h · SP ×1.5 · 85% sprint | feature-level · SP ×1.0 · 100% sprint | epic-level · SP ×0.75 · 110% sprint}
+**test-coverage-target:** {best-effort (no minimum) | ≥ 60% line coverage | ≥ 70% line coverage | ≥ 80% + mutation testing}
+**qa-standard:** {basic | standard | strict | enterprise}
+```
+
+Fill each `{...}` with the appropriate value for the chosen level. This file is the single source of truth for all downstream agents.
+
+Output: `[Virtual Team] ✓ Project configuration written — level: {level} ({label})`
 
 ---
 
@@ -37,7 +70,8 @@ Output:
 
 ```
 [Virtual Team] Starting pipeline for project: {slug}
-[Virtual Team] Hook: pre_write_validator.py active — all artifacts enforced
+[Virtual Team] Level: {level} — {label}
+[Virtual Team] Hooks: level_gate.py + pre_write_validator.py active
 [Virtual Team] Pipeline: BA → TechLead → PM → BE Dev → FE Dev → Tester → QA/QC
 ```
 
@@ -54,7 +88,7 @@ Use the Skill tool:
 
 ```
 skill: team-ba
-args: "{requirement text}" --project {slug} {--srs if flag present} {--context "..." if provided}
+args: "{requirement text}" --project {slug} --level {level} {--srs if flag present} {--context "..." if provided}
 ```
 
 **After the skill completes**, check its output:
@@ -72,7 +106,7 @@ Use the Skill tool:
 
 ```
 skill: team-techlead
-args: --project {slug}
+args: --project {slug} --level {level}
 ```
 
 Check output:
@@ -90,7 +124,7 @@ Use the Skill tool:
 
 ```
 skill: team-pm
-args: --project {slug}
+args: --project {slug} --level {level}
 ```
 
 Check output:
@@ -98,23 +132,47 @@ Check output:
 - `HARD STOP` → STOP.
 - Otherwise proceed.
 
-Output: `[PM] ✓ Sprint plan ready — starting BE Dev phase...`
+Output: `[PM] ✓ Sprint plan ready — loading task registry...`
+
+---
+
+## Step 4.5 — Load Task Registry for TodoWrite Tracking (FR-42)
+
+Use the Read tool: `projects/{slug}/team/pm/task-breakdown.md`
+
+Parse every **TASK-{NNN}** entry and extract its `**Assigned to:**` field.
+
+Build an in-context assignment map:
+- **BE_TASKS**: list of task titles where `Assigned to: BE Dev`
+- **FE_TASKS**: list of task titles where `Assigned to: FE Dev`
+- **TESTER_TASKS**: list of task titles where `Assigned to: Tester`
+- **OTHER_TASKS**: any remaining tasks (TechLead, Documentation, etc.)
+
+Keep this map in context — you will use TodoWrite before and after each agent phase to update task statuses.
+
+Output: `[PM] ✓ Task registry loaded: {n} BE Dev, {n} FE Dev, {n} Tester, {n} other tasks`
 
 ---
 
 ## Step 5 — BE Dev Phase
 
+**Before invoking:** Call TodoWrite with the full task list:
+- All **BE_TASKS** → `status: "in_progress"`
+- All other tasks → `status: "pending"`
+
 Use the Skill tool:
 
 ```
 skill: team-dev
-args: --project {slug}
+args: --project {slug} --level {level}
 ```
 
 Check output:
 
 - `HARD STOP` → STOP.
-- Otherwise proceed.
+- Otherwise: **After invoking**, call TodoWrite with the full task list:
+  - All **BE_TASKS** → `status: "completed"`
+  - All other tasks remain `status: "pending"`
 
 Output: `[BE Dev] ✓ Backend artifacts ready — starting FE Dev phase...`
 
@@ -122,17 +180,25 @@ Output: `[BE Dev] ✓ Backend artifacts ready — starting FE Dev phase...`
 
 ## Step 6 — FE Dev Phase
 
+**Before invoking:** Call TodoWrite with the full task list:
+- All **BE_TASKS** → `status: "completed"` (already done)
+- All **FE_TASKS** → `status: "in_progress"`
+- All other tasks → `status: "pending"`
+
 Use the Skill tool:
 
 ```
 skill: team-fe
-args: --project {slug}
+args: --project {slug} --level {level}
 ```
 
 Check output:
 
 - `HARD STOP` → STOP.
-- Otherwise proceed.
+- Otherwise: **After invoking**, call TodoWrite with the full task list:
+  - All **BE_TASKS** → `status: "completed"`
+  - All **FE_TASKS** → `status: "completed"`
+  - All other tasks remain `status: "pending"`
 
 Output: `[FE Dev] ✓ Frontend artifacts ready — starting Tester phase...`
 
@@ -140,16 +206,23 @@ Output: `[FE Dev] ✓ Frontend artifacts ready — starting Tester phase...`
 
 ## Step 7 — Tester Phase
 
+**Before invoking:** Call TodoWrite with the full task list:
+- All **BE_TASKS** → `status: "completed"`
+- All **FE_TASKS** → `status: "completed"`
+- All **TESTER_TASKS** → `status: "in_progress"`
+- All **OTHER_TASKS** → `status: "pending"`
+
 Use the Skill tool:
 
 ```
 skill: team-test
-args: --project {slug}
+args: --project {slug} --level {level}
 ```
 
 Check output:
 
 - `HARD STOP` → STOP.
+- Otherwise: **After invoking**, call TodoWrite with the full task list — all tasks → `status: "completed"`.
 - Note Gate 2 status from output.
 
 Output: `[Gate 2] {status} — starting QA/QC phase...`
@@ -162,7 +235,7 @@ Use the Skill tool:
 
 ```
 skill: team-qa
-args: --project {slug}
+args: --project {slug} --level {level}
 ```
 
 Check output:
@@ -172,33 +245,16 @@ Check output:
 
 ---
 
-## Step 9 — Aggregate Flags
+## Step 9 — Read Flag Summary
 
-Use Grep tool to search for non-empty `## Flags from Previous Agents` sections:
+The `flag_aggregator.py` hook has already written `projects/{slug}/flags-summary.md` automatically when QA/QC wrote `sign-off.md`.
 
-- Pattern: search `projects/{slug}/team/` for files containing `## Flags from Previous Agents`
-- Read each matching file and extract FLAG-{ROLE}-{NNN} entries that are NOT "No flags detected."
+Use the Read tool: `projects/{slug}/flags-summary.md`
 
-If any flags found, write `projects/{slug}/flags-summary.md`:
+- If the file exists: extract the `total:` line to get the flag count and severity breakdown.
+- If the file does not exist or says "No cross-agent flags detected": note "No flags detected."
 
-```markdown
-# Cross-Agent Flags Summary — {Project Name}
-
-Pipeline run: {ISO 8601 date}
-Total flags: {count}
-
-## From TechLead (reviewing BA artifacts)
-
-{FLAG-TECHLEAD-{n} entries or "None"}
-
-## From Tester (reviewing all preceding artifacts)
-
-{FLAG-TESTER-{n} entries or "None"}
-
-## From QA/QC
-
-{QA-C-{n} and QA-S-{n} entries from quality-report.md or "None"}
-```
+Do NOT write or overwrite `flags-summary.md` — it was already produced by the hook.
 
 ---
 

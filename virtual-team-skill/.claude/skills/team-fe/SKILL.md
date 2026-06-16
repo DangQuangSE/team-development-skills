@@ -22,6 +22,7 @@ Your responsibilities: implement the frontend application based on the TechLead'
 ## Step 0 — Parse Parameters
 
 - **`--project {slug}`** — project identifier. If not provided, use CWD name. Confirm: `"Using project slug: {slug}. Continue? (y/n)"`
+- **`--level {level}`** — project depth level (fresh | junior | mid | senior). Passed from orchestrator. Used as fallback if config is unreadable.
 - **`--context "{text or path}"`** — extra context. If starts with `./` or `/`, read as file. Otherwise inline text. Prepend to work; do NOT write to artifacts.
 
 ---
@@ -49,7 +50,51 @@ If `tech-stack.md` is missing → output error and STOP.
 
 ---
 
-## Step 2 — Implementation Planning
+## Step 1.5 — Level Calibration
+
+Use the Read tool: `projects/{slug}/team/.project-config.md`
+
+- **If exists:** extract `**level:**` from `## Project`. This is the authoritative level.
+- **If missing:** use `--level` arg from Step 0. If also missing → output error and STOP:
+  ```
+  [FE Dev] ✗ No project configuration found. Run /team-ba first to initialize level config.
+  ```
+
+**Active level profile for frontend code generation:**
+
+| Aspect | fresh | junior | mid | senior |
+|---|---|---|---|---|
+| **Component style** | Simple functional components; logic inside JSX acceptable | Custom hooks extract reusable logic; presentational/container separation | Compound components; atomic/molecule/organism split | Atomic design system; design token driven; headless UI patterns |
+| **State management** | `useState` + props drilling acceptable | Context API + `useReducer` for shared state | Redux Toolkit or Zustand; selectors; async thunks | React Query (server state) + Zustand/Jotai (client state); optimistic updates |
+| **API calls** | `fetch()` in `useEffect` directly inside component | API service layer (`src/services/`) — one file per resource | React Query or SWR + service layer; automatic cache invalidation | React Query + optimistic updates + prefetching + stale-while-revalidate |
+| **Error handling** | `alert()` or `console.error` | Error states in component UI; try/catch in service | Error boundaries around page components; toast notifications | Error boundaries + monitoring (Sentry); graceful degradation per feature |
+| **Performance** | None required | Key loading/skeleton states; avoid re-render on every keystroke | `React.lazy()` + `Suspense`; code splitting per route; image optimization | Bundle analysis; list virtualization; `useMemo`/`useCallback`; performance budget |
+| **Accessibility** | None required | Semantic HTML; `alt` text on images | ARIA roles; keyboard navigation; focus management | WCAG 2.1 AA compliance; screen reader testing notes in code |
+
+Output: `[FE Dev] ✓ Level calibrated: {level} — applying {state management} + {component style}`
+
+---
+
+## Step 2 — Pre-Analysis: Deep Implementation Thinking *(mid / senior only)*
+
+**Skip this step if level is `fresh` or `junior` — proceed directly to Step 3.**
+
+**Do not write any files yet.** Think exhaustively first. No output — internal reasoning only.
+
+1. **Component hierarchy** — design the full component tree before writing any file. Which components are pages? Which are shared UI? Which are feature-specific? Identify prop drilling risks early.
+2. **State shape design** — what does the complete global state look like? For each piece of state: is it server state (React Query / SWR) or client state (local/global store)? Wrong classification causes cache bugs and stale UI.
+3. **User interaction → system state mapping** — for every user action in the acceptance criteria, trace the full chain: user action → state mutation → API call → UI update → error state. Are all branches handled?
+4. **Error state inventory** — for every async operation, enumerate: loading state, success state, empty state, error state, partial failure state. Missing error states are the most common UX bugs.
+5. **Re-render analysis** — which state changes cause which components to re-render? For mid/senior: identify components that need `useMemo`, `useCallback`, or `React.memo` to prevent cascading re-renders.
+6. **Route and guard mapping** — enumerate every route, its auth requirement, redirect conditions, and what happens on unauthorized access. Missing guard = security hole exposed at FE level.
+7. **API contract assumptions** — for each service function, list exact request/response shapes expected from BE Dev. If the BE contract differs from what TechLead documented, it becomes a bug here.
+8. **User behavior edge cases** — what will confused or malicious users do? (double-submit, browser back on form, paste scripts into inputs, open same page in two tabs). Map the behaviors that could cause inconsistent UI state.
+
+Only proceed to Step 3 after exhausting this analysis.
+
+---
+
+## Step 3 — Implementation Planning
 
 From `tech-stack.md`, identify:
 - **Frontend framework** (e.g., React, Vue, Next.js, Svelte, Angular)
@@ -69,7 +114,7 @@ Plan your file structure based on the framework:
 
 ---
 
-## Step 3 — Write Frontend Source Files
+## Step 4 — Write Frontend Source Files
 
 Write actual implementation files to `projects/{slug}/team/fe/`.
 
@@ -102,7 +147,7 @@ For each page, implement the UI behavior specified in the acceptance criteria GW
 
 ---
 
-## Step 4 — Write `pr-description.md`
+## Step 5 — Write `pr-description.md`
 
 Write `projects/{slug}/team/fe/pr-description.md`:
 
@@ -144,7 +189,7 @@ Write `projects/{slug}/team/fe/pr-description.md`:
 
 ---
 
-## Step 5 — Layer 1 Validation
+## Step 6 — Layer 1 Validation
 
 After writing all files, use the Read tool to re-read `pr-description.md`. Check required headings (case-sensitive):
 
@@ -189,7 +234,7 @@ Action: run /team-fe --project {slug} to retry manually
 
 ---
 
-## Step 6 — Handoff
+## Step 7 — Handoff
 
 Output:
 ```
