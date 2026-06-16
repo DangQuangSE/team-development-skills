@@ -25,6 +25,15 @@ Reference files (load before starting):
 - `skills/srs-generator/references/srs-template.md`
 - `skills/srs-generator/references/gap-detection-guide.md`
 
+**Context files (load if present — created by `scripts/init_project.py`):**
+- `projects/{name}/_context/vision.md` → pre-fills §1.2 Scope and §2.1
+- `projects/{name}/_context/features.md` → pre-fills §2.2 and IN/OUT table
+- `projects/{name}/_context/tech_stack.md` → pre-fills §3.5 Design Constraints
+- `projects/{name}/_context/glossary.md` → pre-fills Appendix A
+- `projects/{name}/_context/quality_standards.md` → pre-fills §3.3–§3.6 NFR
+
+If context files exist: skip Brainstorm Gate questions already answered there.
+
 ---
 
 ### Brainstorm Gate — Understand Context First

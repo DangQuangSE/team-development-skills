@@ -1,39 +1,146 @@
 # srs-skills
 
-Agent-agnostic skill package for IEEE 830-1998 Software Requirements Specification generation.
+AI skill package tạo **Software Requirements Specification (IEEE 830-1998)** từ ý tưởng đến tài liệu hoàn chỉnh.
 
-Drop into any AI-powered project — Claude Code, Gemini CLI, GitHub Copilot, or custom agents.
+---
 
-## What it does
+## Cài đặt
 
-1. **Brainstorm** — asks 3 context questions before touching requirements
-2. **Extract** — identifies actors, features, constraints, out-of-scope from any raw input
-3. **Gap Scan** — detects 7 ambiguity pattern types (vague quantifiers, undefined actors, contradictions, etc.)
-4. **Clarify** — priority-gated Q&A rounds (P1 blockers → P2 functional → P3 non-functional)
-5. **Generate** — full IEEE 830 SRS with "shall" clauses, GWT acceptance stubs, QA Scenarios
-6. **Save** — path-confirmed write to `docs/srs-{slug}-{YYYYMMDD}.md`
+Copy skills vào project của bạn:
 
-## Output quality
-
-- FRs: `"The system shall {verb} {object} when {condition}."` + Given/When/Then stubs
-- NFRs: ISO/IEC 25023 Quality Attribute Scenarios (numeric thresholds, no adjectives)
-- Tags: `[CONTEXT-GAP]` / `[GLOSSARY-GAP]` / `[VERIFIABILITY-FAIL]` / `[TBD: ... | owner: ... | resolve-by: ...]`
-- Verdict: COMPLIANT / PARTIALLY COMPLIANT / NON-COMPLIANT
-
-## Structure
-
-```
-srs-skills/
-  README.md
-  AGENTS.md                                  ← per-tool integration guide
-  skills/
-    srs-generator/
-      SKILL.md                               ← main skill (agent-agnostic)
-      references/
-        srs-template.md                      ← IEEE 830 §1–§3 + Appendix scaffold
-        gap-detection-guide.md               ← 7 patterns + IEEE 830 quality checklist
+```bash
+cp -r srs-skills/.claude/skills/sr-* <your-project>/.claude/skills/
+cp -r srs-skills/skills/srs-workflow/references <your-project>/.claude/skills/srs-workflow/
+cp -r srs-skills/skills/srs-generator/references <your-project>/.claude/skills/srs-generator/
 ```
 
-## Quick start
+Hoặc mở thẳng thư mục `srs-skills/` trong Claude Code là dùng được ngay.
 
-See [AGENTS.md](AGENTS.md) for setup instructions per tool.
+---
+
+## Chọn workflow phù hợp
+
+| Tình huống | Command |
+|-----------|---------|
+| Có ý tưởng / topic, chưa có requirements | Dùng pipeline `/sr:*` bên dưới |
+| Đã có sẵn requirements text | `/cl:srs` — phân tích và tạo SRS luôn |
+
+---
+
+## Pipeline đầy đủ: `/sr:*`
+
+Chạy từng bước theo thứ tự. Mỗi bước đọc output của bước trước.
+
+### `/sr:brainstorm`
+
+Nhập topic của bạn. AI sẽ hỏi 5 vòng câu hỏi có options để chọn:
+
+- Vòng 1 — Actors & Users
+- Vòng 2 — Core Features
+- Vòng 3 — Scope (IN / OUT)
+- Vòng 4 — Tech Constraints + NFR targets
+- Vòng 5 — Business Rules & Edge Cases
+
+AI **không được đoán** — bắt buộc hỏi lại nếu chưa rõ. Kết thúc khi không còn open item nào.
+
+> Output: `projects/{slug}/brainstorm.md`
+
+---
+
+### `/sr:spec`
+
+Đọc `brainstorm.md`, viết spec đầy đủ: actors, features, business rules, NFR baselines, assumptions, open items. Không giới hạn từ.
+
+> Output: `projects/{slug}/spec.md`
+
+---
+
+### `/sr:plan`
+
+Đọc `spec.md`, tạo **12 file plan riêng biệt** — mỗi file là blueprint chi tiết cho từng section của SRS (§1–§3, Appendix A/B). Bao gồm FR stubs và NFR targets.
+
+Sau khi xong AI sẽ hỏi bạn review và approve trước khi generate SRS.
+
+> Output: `projects/{slug}/plan/` (12 files)
+
+---
+
+### `/sr:generate`
+
+Đọc plan files đã được approve, tạo SRS hoàn chỉnh — **không giới hạn từ**, có thể lên tới 300+ trang. Mỗi section là 1 file riêng.
+
+Mỗi FR bắt buộc có:
+- `The system shall ...` clause
+- Given / When / Then acceptance criteria
+
+Mỗi NFR bắt buộc có numeric Response Measure (không dùng adjective như "fast", "good").
+
+> Output: `projects/{slug}/srs/` (11 files + master index)
+
+---
+
+### `/sr:validate`
+
+Chạy `srs_validator.py` trên toàn bộ thư mục `srs/`. Kiểm tra theo IEEE 830:
+- Đủ sections bắt buộc
+- FR numbering không bị gap
+- Mỗi FR có "shall" + GWT
+- NFR có numeric target
+- Không còn tag `[TBD]` / `[CONTEXT-GAP]` chưa resolve
+
+ERRORs được fix ngay trong session. WARNs chuyển sang bước sau.
+
+Verdict: **COMPLIANT** / **PARTIALLY COMPLIANT** / **NON-COMPLIANT**
+
+---
+
+### `/sr:improve`
+
+Tạo báo cáo cải thiện: features bị defer, technical risks, NFR gaps, FR cần tách nhỏ hơn, warnings từ bước validate.
+
+> Output: `projects/{slug}/improvement-report.md`
+
+---
+
+### `/sr:save`
+
+Lưu toàn bộ context của project vào 6 file nhỏ để các session Claude sau load lại không cần đọc lại toàn bộ SRS.
+
+> Output: `projects/{slug}/_context/` (vision, features, tech stack, glossary, quality standards, session notes)
+
+---
+
+## Quick SRS: `/cl:srs`
+
+Dùng khi đã có requirements text sẵn. Paste text vào, AI sẽ:
+
+1. Scan 7 loại ambiguity (vague quantifiers, undefined actors, contradictions…)
+2. Hỏi clarification theo priority (P1 blockers trước)
+3. Tạo SRS single-file chuẩn IEEE 830
+
+---
+
+## Scripts CLI (tùy chọn)
+
+```bash
+# Scan requirements text trước khi đưa vào AI
+python scripts/gap_scanner.py requirements.txt
+
+# Validate SRS thủ công
+python scripts/srs_validator.py --dir projects/{slug}/srs/
+python scripts/srs_validator.py --dir projects/{slug}/srs/ --strict   # WARN = ERROR
+python scripts/srs_validator.py --dir projects/{slug}/srs/ --format json
+
+# Khởi tạo context scaffold cho project mới
+python scripts/init_project.py {slug}
+```
+
+---
+
+## Tóm tắt commands
+
+```
+/sr:brainstorm  →  /sr:spec  →  /sr:plan  →  /sr:generate  →  /sr:validate  →  /sr:improve  →  /sr:save
+
+hoặc: /cl:srs   (nếu đã có requirements text)
+```

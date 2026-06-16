@@ -11,69 +11,82 @@ readable by any LLM. No tool-specific syntax is required to follow them.
 
 ```
 srs-skills/
-  .claude/skills/srs-generator/SKILL.md   ← tự động được pick up
-  skills/srs-generator/references/        ← shared references
+  .claude/skills/srs-generator/SKILL.md   ← /cl:srs  (quick SRS from existing reqs)
+  .claude/skills/srs-workflow/SKILL.md    ← /cl:srs-flow  (full pipeline: brainstorm → SRS)
+  skills/srs-generator/references/        ← shared references (srs-template, gap-guide)
+  skills/srs-workflow/references/         ← workflow references (brainstorm-guide, plan-structure)
 ```
 
-Invoke bằng: `/cl:srs`
+| Skill | Invoke | Use when |
+|-------|--------|----------|
+| `cl:srs` | `/cl:srs` | User already has raw requirements text |
+| `cl:srs-flow` | `/cl:srs-flow` | User has only a topic/idea — needs full brainstorm → SRS pipeline |
 
-Hoặc copy vào project khác:
+Copy to another project:
 
 ```bash
+# Quick SRS skill only
 cp -r srs-skills/.claude/skills/srs-generator <your-project>/.claude/skills/
 cp -r srs-skills/skills/srs-generator/references <your-project>/.claude/skills/srs-generator/
+
+# Full workflow skill (includes above references)
+cp -r srs-skills/.claude/skills/srs-workflow <your-project>/.claude/skills/
+cp -r srs-skills/skills/srs-workflow/references <your-project>/.claude/skills/srs-workflow/
+
+# Automation scripts
+cp -r srs-skills/scripts <your-project>/
+cp -r srs-skills/.claude/hooks <your-project>/.claude/
 ```
 
 ---
 
 ## Gemini CLI
 
-Add the skill directory to your project and reference it in the Gemini system prompt or config:
-
 ```bash
 cp -r srs-skills/skills/srs-generator .gemini/skills/
+cp -r srs-skills/skills/srs-workflow .gemini/skills/
 ```
 
-In `.gemini/system.md` (or equivalent):
+In `.gemini/system.md`:
 ```
-When the user types @srs or "generate srs", load and follow:
-.gemini/skills/srs-generator/SKILL.md
+When the user types @srs: follow .gemini/skills/srs-generator/SKILL.md
+When the user types @srs-flow: follow .gemini/skills/srs-workflow/SKILL.md
 ```
 
 ---
 
 ## GitHub Copilot (Workspace Instructions)
 
-Copy skill content into your `.github/copilot-instructions.md` or a custom instruction file:
-
-```bash
-# Or reference the file directly in Copilot settings
-```
-
 In `.github/copilot-instructions.md`:
 ```
-When asked to generate an SRS or analyze requirements, follow the instructions in:
-srs-skills/skills/srs-generator/SKILL.md
+For quick SRS from existing requirements, follow: srs-skills/skills/srs-generator/SKILL.md
+For full brainstorm-to-SRS pipeline, follow: srs-skills/skills/srs-workflow/SKILL.md
 ```
 
 ---
 
 ## Any Other LLM / Agent
 
-1. Load `skills/srs-generator/SKILL.md` into the agent's context or system prompt
-2. Also load `skills/srs-generator/references/srs-template.md` and `references/gap-detection-guide.md`
-3. The skill is self-contained — no external APIs or tool calls required
+Load the appropriate SKILL.md into the agent's system prompt:
 
-**Activation:** teach the agent to trigger on keywords listed at the top of SKILL.md:
-`srs`, `write srs`, `generate srs`, `analyze requirements`, `I have raw requirements`
+| Goal | Files to load |
+|------|--------------|
+| Quick SRS from existing reqs | `skills/srs-generator/SKILL.md` + `references/srs-template.md` + `references/gap-detection-guide.md` |
+| Full pipeline from topic | `skills/srs-workflow/SKILL.md` + both reference dirs |
+
+The skills are self-contained — no external APIs required. Python scripts are optional enhancements
+(gap_scanner.py, srs_validator.py) callable from Claude hooks or manually from CLI.
 
 ---
 
 ## Keyword / Alias Convention
 
-| Tool | Config location | Example alias |
-|------|----------------|---------------|
-| Claude Code | SKILL.md `name:` frontmatter | `/cl:srs` |
-| Gemini CLI | system prompt | `@srs` |
-| GitHub Copilot | copilot-instructions.md | `#srs` |
-| Custom agent | system prompt / router | `!srs` |
+| Tool | Skill | Alias |
+|------|-------|-------|
+| Claude Code | cl:srs | `/cl:srs` |
+| Claude Code | cl:srs-flow | `/cl:srs-flow` |
+| Gemini CLI | srs-generator | `@srs` |
+| Gemini CLI | srs-workflow | `@srs-flow` |
+| GitHub Copilot | srs-generator | `#srs` |
+| GitHub Copilot | srs-workflow | `#srs-flow` |
+| Custom agent | either | `!srs` / `!srs-flow` |

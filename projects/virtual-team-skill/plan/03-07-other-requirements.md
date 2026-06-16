@@ -1,0 +1,117 @@
+# Plan: §3.7 Other Requirements — Virtual Team Skill
+
+---
+
+## §3.7.1 Localization / Internationalization (i18n)
+
+### Languages
+- **Skill instruction language**: English only (v1). All skill `.md` file instructions are written in English.
+- **Artifact output language**: Agent-generated artifacts follow the operator's input language. If the operator writes requirements in Vietnamese, the BA agent should respond in Vietnamese (LLM behavior — not enforced by skill structure). If the operator writes in English, artifacts are in English.
+- **No hardcoded language setting**: The skill does not specify an output language — it inherits from operator input.
+
+### Localization of Artifact Templates
+- Required section headings (used in validation Layer 1) are defined in English in the validation schema.
+- This means validation checks for English headings (`## User Stories`, `## Business Rules`, etc.) regardless of artifact body language.
+- [NEEDS USER INPUT: if operators need Vietnamese or other language headings validated, validation schema must be localized — not in scope v1]
+
+### RTL Support
+- Not applicable (CLI tool; artifacts are Markdown files rendered by operator's own tools).
+
+### Date / Number / Currency Formats
+- Sprint plan dates and story points are generated using the operator's context (no explicit format enforcement in v1).
+- Date timestamps in validation error logs and sign-off files use ISO 8601 format (YYYY-MM-DDTHH:MM:SSZ) — universal, language-independent.
+
+### Timezone Handling
+- ISO 8601 UTC timestamps in all generated metadata fields.
+- No timezone conversion logic in the skill.
+
+---
+
+## §3.7.2 Legal / Regulatory
+
+### Applicable Regulations
+- **None** — Virtual Team Skill is a developer tooling product. It does not process end-user PII, financial data, healthcare data, or any other regulated data category.
+- No GDPR, HIPAA, PCI-DSS, or SOC2 obligations apply to the skill itself.
+- Operators are solely responsible for the regulatory compliance of whatever product they build using the skill's output.
+
+### Self-imposed Policies
+1. **No credential embedding**: Generated code must not contain credentials (BR-05, FR-24, FR-27). This is a security policy, not a legal requirement.
+2. **Data stays local**: No operator data is transmitted to third parties beyond the Anthropic API (Privacy self-constraint, NFR-05).
+
+### Intellectual Property
+- Generated artifacts (user stories, code, test plans, architecture documents) are produced by AI models. Operators are responsible for reviewing IP status of AI-generated content in their jurisdiction.
+- The skill files themselves (`.md` files) are part of the MySkills repository and subject to that repository's license.
+
+### Cookie / Consent Requirements
+- None (CLI tool, no web interface, no cookies).
+
+---
+
+## §3.7.3 Operational Requirements
+
+### Monitoring and Alerting
+- No server-side monitoring (no hosted component).
+- Operator-level monitoring: progress is visible in CLI output during pipeline execution.
+- For CLI-level observability: skill outputs structured progress lines with `[Agent]` prefixes that could be piped to a log file if desired (`/team "req" | tee pipeline.log`).
+- No automated alerting or paging — local CLI tool.
+
+### Logging
+- Validation failure logs are written to `projects/{slug}/validation-errors/` (FR-36) — permanent, not rotated.
+- Flags summary is written to `projects/{slug}/flags-summary.md`.
+- No centralized log aggregation.
+- No structured log format (JSON/NDJSON) required in v1 — plain Markdown is sufficient.
+
+### On-call / Support SLA
+- Not applicable (no hosted service, no SLA commitment to operators).
+- Support is provided through repository issue tracking (GitHub Issues) or documentation updates.
+
+### Runbooks
+- A runbook (or FAQ section in README) should cover:
+  - How to resume a failed pipeline
+  - How to interpret validation error logs
+  - How to override QA/QC REJECTED verdict
+  - How to pass extra context to a specific agent
+- [NEEDS USER INPUT: confirm whether a runbook document is required or if README is sufficient]
+
+---
+
+## §3.7.4 Transition Requirements
+
+### Data Migration
+- No existing system to migrate from — Virtual Team Skill is a new tool.
+- Operators adopting it from scratch do not need to migrate data.
+
+### Integration with Existing Workflows
+- Operators who already use the SRS workflow (`sr-brainstorm` → `sr-spec`) can immediately use SRS artifacts as input to the BA agent (F-C03, FR-40) — no migration required; just use `--srs` flag.
+- Operators with existing codebases can pass existing architecture or code context via `--context` parameter to the relevant agent.
+
+### Cutover Strategy
+- Not applicable — no cutover from an existing system. This is a greenfield tool.
+
+### Rollback Plan
+- If a skill version causes issues: operators can revert to a previous version by checking out an older git commit.
+- Existing project artifacts generated by an older skill version remain on disk and are unaffected by skill version changes.
+- No database to roll back.
+
+---
+
+## §3.7.5 Training Requirements
+
+### Operator Training
+- **Solo Developers and Technical Leads** (ACTOR-01, ACTOR-02): Minimal training required. README and a quick-start example are sufficient.
+- **Product Managers / BA (Human)** (ACTOR-03): May need brief onboarding to understand: what Claude Code CLI is, how to install it, and how to interpret BA and PM artifacts. A step-by-step onboarding guide should cover these use cases.
+- **Startup Founders** (ACTOR-04): Need clear quick-start guide covering: installation, single command to run full pipeline, how to read artifacts, and what to do with generated code.
+
+### Documentation Requirements
+- **README.md**: Installation, quick start, command reference, artifact structure diagram, FAQ
+- **CLAUDE.md** (or similar): Project context for Claude Code sessions in the repository
+- **Per-skill help**: Each skill command should have inline help accessible via `--help` flag (or documented in README)
+- [NEEDS USER INPUT: confirm whether inline `--help` support in skill files is feasible in Claude Code skill format]
+
+### Developer Documentation (for Skill Contributors)
+- Skill file authoring guide: how validation schemas are defined, how to add a new agent role
+- Contribution guide: branching strategy, PR process, testing a skill change end-to-end
+- Architecture overview: how orchestrator calls individual role skills, how context chain works
+
+### AI-Assisted Learning
+- Because operators use Claude Code, they can ask Claude to explain any artifact generated by the skill directly in the conversation — no special training materials needed for artifact interpretation.

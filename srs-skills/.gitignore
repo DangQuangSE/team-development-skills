@@ -1,6 +1,9 @@
 # Generated SRS output
 docs/
 
+# Project context directories (created by init_project.py — project-specific)
+projects/
+
 # OS
 .DS_Store
 Thumbs.db
