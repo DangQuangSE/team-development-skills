@@ -71,13 +71,15 @@ UNRESOLVED_TAGS = {
 
 FR_BLOCK_PATTERN  = re.compile(r"(FR-\d+)", re.IGNORECASE)
 FR_SHALL_PATTERN  = re.compile(r"Requirement\s*:\s*.+shall\b", re.IGNORECASE)
-FR_GIVEN_PATTERN  = re.compile(r"\bGiven\s*:", re.IGNORECASE)
-FR_WHEN_PATTERN   = re.compile(r"\bWhen\s*:", re.IGNORECASE)
-FR_THEN_PATTERN   = re.compile(r"\bThen\s*:", re.IGNORECASE)
+FR_GIVEN_PATTERN  = re.compile(r"\*\*Given\*\*|\bGiven\s*:", re.IGNORECASE)
+FR_WHEN_PATTERN   = re.compile(r"\*\*When\*\*|\bWhen\s*:", re.IGNORECASE)
+FR_THEN_PATTERN   = re.compile(r"\*\*Then\*\*|\bThen\s*:", re.IGNORECASE)
 NFR_MEASURE_PATTERN = re.compile(
-    r"Response\s+Measure\s*:\s*(.+)", re.IGNORECASE
+    r"\|\s*Response\s+Measure\s*\|\s*(.+?)\s*\|", re.IGNORECASE
 )
 NUMERIC_PATTERN   = re.compile(r"\d+\s*(ms|s|%|rpm|tps|gb|mb|users?|req|uptime|sla|mtbf)", re.IGNORECASE)
+FR_PRIORITY_PATTERN = re.compile(r"FR-\d+\s*\[(Essential|Conditional|Optional)\]", re.IGNORECASE)
+NFR_ID_PATTERN    = re.compile(r"NFR-(\d+)", re.IGNORECASE)
 
 
 # ---------------------------------------------------------------------------
@@ -175,6 +177,52 @@ def check_nfr_measures(text: str) -> list[Finding]:
 
 
 # ---------------------------------------------------------------------------
+# Stats
+# ---------------------------------------------------------------------------
+
+def compute_stats(text: str) -> dict:
+    priority_counts = {"essential": 0, "conditional": 0, "optional": 0}
+    for m in FR_PRIORITY_PATTERN.finditer(text):
+        priority_counts[m.group(1).lower()] += 1
+    fr_ids = {int(m.group(1)) for m in re.finditer(r"FR-(\d+)", text, re.IGNORECASE)}
+
+    nfr_ids = {int(m.group(1)) for m in NFR_ID_PATTERN.finditer(text)}
+    nfr_tbd = 0
+    nfr_confirmed = 0
+    for m in NFR_MEASURE_PATTERN.finditer(text):
+        measure = m.group(1).strip()
+        if "[TBD" in measure:
+            nfr_tbd += 1
+        else:
+            nfr_confirmed += 1
+
+    open_items = sum(len(re.findall(p, text)) for p in UNRESOLVED_TAGS.values())
+
+    return {
+        "fr_total": len(fr_ids),
+        "fr_essential": priority_counts["essential"],
+        "fr_conditional": priority_counts["conditional"],
+        "fr_optional": priority_counts["optional"],
+        "nfr_total": len(nfr_ids),
+        "nfr_confirmed": nfr_confirmed,
+        "nfr_tbd": nfr_tbd,
+        "open_items": open_items,
+    }
+
+
+def format_stats(stats: dict, fmt: str) -> str:
+    if fmt == "json":
+        return json.dumps(stats, indent=2, ensure_ascii=False)
+    return (
+        f"FRs:  {stats['fr_total']} total "
+        f"({stats['fr_essential']} Essential / {stats['fr_conditional']} Conditional / {stats['fr_optional']} Optional)\n"
+        f"NFRs: {stats['nfr_total']} total "
+        f"({stats['nfr_confirmed']} confirmed / {stats['nfr_tbd']} [TBD])\n"
+        f"Open items (unresolved tags): {stats['open_items']}"
+    )
+
+
+# ---------------------------------------------------------------------------
 # Verdict
 # ---------------------------------------------------------------------------
 
@@ -250,6 +298,8 @@ def main() -> None:
     parser.add_argument("--format", choices=["markdown", "json"], default="markdown")
     parser.add_argument("--strict", action="store_true",
                         help="Treat warnings as errors (stricter verdict)")
+    parser.add_argument("--stats", action="store_true",
+                        help="Print FR/NFR/open-item counts instead of findings")
     args = parser.parse_args()
 
     if args.dir:
@@ -270,6 +320,10 @@ def main() -> None:
             sys.exit(1)
         text = path.read_text(encoding="utf-8")
         label = str(path)
+
+    if args.stats:
+        print(format_stats(compute_stats(text), args.format))
+        sys.exit(0)
 
     findings, v = validate(text, strict=args.strict)
 

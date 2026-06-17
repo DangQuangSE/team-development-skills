@@ -61,7 +61,13 @@ Write in this order (each file before proceeding to next):
 
 ## Step 2 — Summary Table
 
-After all 12 files are written, output:
+After all 12 files are written, run:
+```bash
+python scripts/plan_validator.py --dir projects/{slug}/plan/ --stats
+```
+Use its counts (don't recount by hand — for large plans manual counting drifts).
+
+Output:
 
 ```
 | File | Section | FRs | NFRs | Open items |

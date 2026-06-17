@@ -23,6 +23,8 @@ AskUserQuestion: "Which project to save context for? (slug)"
 ```
 
 Read all available files in `projects/{slug}/`.
+Run `python scripts/srs_validator.py --dir projects/{slug}/srs/ --stats` and use its
+counts for quality_standards.md / session-notes.md below instead of recounting by hand.
 
 ---
 

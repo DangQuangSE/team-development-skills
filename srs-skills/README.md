@@ -59,13 +59,20 @@ AI **không được đoán** — bắt buộc hỏi lại nếu chưa rõ. Kế
 
 Đọc `spec.md`, tạo **12 file plan riêng biệt** — mỗi file là blueprint chi tiết cho từng section của SRS (§1–§3, Appendix A/B). Bao gồm FR stubs và NFR targets.
 
-Sau khi xong AI sẽ hỏi bạn review và approve trước khi generate SRS.
+Sau khi xong, `plan_validator.py` chạy để đếm FR/NFR (tránh đếm tay sai), rồi AI hỏi bạn review và approve trước khi generate SRS.
 
 > Output: `projects/{slug}/plan/` (12 files)
 
 ---
 
 ### `/sr:generate`
+
+Trước khi viết, chạy gate `plan_validator.py --dir projects/{slug}/plan/`:
+- **BLOCKED** (thiếu file, FR numbering gap, thiếu "shall"...) → dừng, yêu cầu sửa ở `/sr:plan`
+- **READY WITH WARNINGS** (còn `[NEEDS USER INPUT]` chưa track) → hỏi xác nhận tiếp tục
+- **READY** → generate
+
+Mục đích: bắt lỗi cấu trúc trên plan (rẻ) trước khi tốn token viết lại SRS 300+ trang.
 
 Đọc plan files đã được approve, tạo SRS hoàn chỉnh — **không giới hạn từ**, có thể lên tới 300+ trang. Mỗi section là 1 file riêng.
 
@@ -126,10 +133,15 @@ Dùng khi đã có requirements text sẵn. Paste text vào, AI sẽ:
 # Scan requirements text trước khi đưa vào AI
 python scripts/gap_scanner.py requirements.txt
 
+# Validate plan/ trước khi generate (Phase 4 gate)
+python scripts/plan_validator.py --dir projects/{slug}/plan/
+python scripts/plan_validator.py --dir projects/{slug}/plan/ --stats   # đếm FR/NFR/open items
+
 # Validate SRS thủ công
 python scripts/srs_validator.py --dir projects/{slug}/srs/
 python scripts/srs_validator.py --dir projects/{slug}/srs/ --strict   # WARN = ERROR
 python scripts/srs_validator.py --dir projects/{slug}/srs/ --format json
+python scripts/srs_validator.py --dir projects/{slug}/srs/ --stats    # đếm FR/NFR/open items
 
 # Khởi tạo context scaffold cho project mới
 python scripts/init_project.py {slug}

@@ -3,8 +3,10 @@
 Hook: PostToolUse (Write)
 Fires after Claude writes a file.
 
-If the written file looks like an SRS (path contains 'srs' and ends in .md),
-auto-runs srs_validator.py and injects the verdict as additionalContext.
+If the written file is inside a 'plan/' directory, auto-runs plan_validator.py
+(Phase 4 readiness gate). If it looks like an SRS (path contains 'srs' and ends
+in .md), auto-runs srs_validator.py. Either way the verdict is injected as
+additionalContext.
 """
 
 import json
@@ -13,6 +15,11 @@ import sys
 from pathlib import Path
 
 SCRIPTS_DIR = Path(__file__).parent.parent.parent / "scripts"
+
+
+def is_plan_file(file_path: str) -> bool:
+    p = Path(file_path)
+    return p.suffix == ".md" and p.parent.name.lower() == "plan"
 
 
 def is_srs_file(file_path: str) -> bool:
@@ -24,19 +31,14 @@ def is_srs_file(file_path: str) -> bool:
     return "srs" in p.name.lower() or "/srs/" in path_str
 
 
-def run_validator(file_path: str) -> str | None:
-    validator = SCRIPTS_DIR / "srs_validator.py"
-    if not validator.exists():
+def run_script(script_name: str, args: list[str]) -> str | None:
+    script = SCRIPTS_DIR / script_name
+    if not script.exists():
         return None
-    p = Path(file_path)
-    # If file is inside a directory named 'srs', validate the whole directory
-    if p.parent.name.lower() == "srs":
-        cmd = [sys.executable, str(validator), "--dir", str(p.parent)]
-    else:
-        cmd = [sys.executable, str(validator), file_path]
     try:
         result = subprocess.run(
-            cmd, capture_output=True, text=True, timeout=25, encoding="utf-8"
+            [sys.executable, str(script), *args],
+            capture_output=True, text=True, timeout=25, encoding="utf-8"
         )
         return result.stdout.strip()
     except Exception:
@@ -54,10 +56,34 @@ def main() -> None:
         sys.exit(0)
 
     file_path = event.get("tool_input", {}).get("file_path", "")
-    if not file_path or not is_srs_file(file_path):
+    if not file_path:
         sys.exit(0)
 
-    validation = run_validator(file_path)
+    if is_plan_file(file_path):
+        plan_dir = str(Path(file_path).parent)
+        validation = run_script("plan_validator.py", ["--dir", plan_dir])
+        if not validation:
+            sys.exit(0)
+        output = {
+            "additionalContext": (
+                f"## Post-save: Plan Validation\n\n"
+                f"{validation}\n\n"
+                "> Fix ERROR findings before running /sr:generate — they will block the gate. "
+                "WARNs (e.g. open [NEEDS USER INPUT] items) should be tracked in appendix-b-open-issues.md."
+            )
+        }
+        print(json.dumps(output))
+        return
+
+    if not is_srs_file(file_path):
+        sys.exit(0)
+
+    p = Path(file_path)
+    # If file is inside a directory named 'srs', validate the whole directory
+    if p.parent.name.lower() == "srs":
+        validation = run_script("srs_validator.py", ["--dir", str(p.parent)])
+    else:
+        validation = run_script("srs_validator.py", [file_path])
     if not validation:
         sys.exit(0)
 

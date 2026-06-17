@@ -21,7 +21,7 @@ no summaries, no "see plan for details."
 
 ---
 
-## Step 0 — Identify Project
+## Step 0 — Identify Project & Gate
 
 ```
 AskUserQuestion: "Which project to generate SRS for? (slug)"
@@ -29,6 +29,20 @@ AskUserQuestion: "Which project to generate SRS for? (slug)"
 
 Read all files in `projects/{slug}/plan/`.
 If plan files don't exist or are incomplete: tell user to run `/sr:plan` first.
+
+Run the readiness gate before writing anything:
+```bash
+python scripts/plan_validator.py --dir projects/{slug}/plan/
+```
+
+- **BLOCKED** (ERRORs found, e.g. missing file, FR numbering gap, missing "shall"
+  clause, bad priority tag): stop here. List the ERRORs and tell the user to fix
+  them via `/sr:plan` before retrying `/sr:generate`.
+- **READY WITH WARNINGS** (e.g. unresolved `[NEEDS USER INPUT]` not yet logged in
+  appendix-b-open-issues.md): show the warnings and ask the user to confirm
+  proceeding anyway, or go back to `/sr:plan` to resolve them.
+- **READY**: proceed to Step 1.
+
 Load `skills/srs-generator/references/srs-template.md`.
 
 ---
@@ -137,6 +151,9 @@ Total NFRs: {n} ({n} confirmed / {n} [TBD])
 ---
 
 ## Step 3 — Handoff
+
+Run `python scripts/srs_validator.py --dir projects/{slug}/srs/ --stats` and use its
+counts below (don't recount a 300+ page document by hand).
 
 Output:
 ```
