@@ -1,17 +1,17 @@
 ---
-name: sr:validate
+name: at:srs-validate
 description: >
   Phase 7 of the SRS workflow. Runs srs_validator.py --dir on the generated
   SRS files, reports errors and warnings, auto-fixes ERRORs, and outputs
   a COMPLIANT / PARTIALLY COMPLIANT / NON-COMPLIANT verdict.
 user-invocable: true
 metadata:
-  input:  projects/{slug}/srs/ directory (from /sr:generate)
+  input:  projects/{slug}/srs/ directory (from /at:srs-generate)
   output: validation verdict + fixes applied inline
-  next:   /sr:improve
+  next:   /at:srs-improve
 ---
 
-# sr:validate
+# at:srs-validate
 
 Goal: validate the generated SRS against IEEE 830-1998.
 Fix all ERRORs before reporting. WARNings are captured for the improvement report.
@@ -25,7 +25,7 @@ ask_question: "Which project to validate? (slug)"
 ```
 
 Check that `projects/{slug}/srs/` exists and contains .md files.
-If missing: tell user to run `/sr:generate` first.
+If missing: tell user to run `/at:srs-generate` first.
 
 ---
 
@@ -77,9 +77,9 @@ Verdict: COMPLIANT | PARTIALLY COMPLIANT | NON-COMPLIANT
 File:    projects/{slug}/srs/ ({N} files)
 
 ERRORs fixed:  {count}
-WARNings open: {count} → captured in /sr:improve report
+WARNings open: {count} → captured in /at:srs-improve report
 
-Next: /sr:improve → improvement report + warning resolution guide
+Next: /at:srs-improve → improvement report + warning resolution guide
 ```
 
 

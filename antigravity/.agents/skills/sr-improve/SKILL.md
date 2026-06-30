@@ -1,5 +1,5 @@
 ---
-name: sr:improve
+name: at:srs-improve
 description: >
   Phase 8 of the SRS workflow. Generates an improvement report covering
   deferred features, technical risks, validation warnings, and next-version
@@ -8,10 +8,10 @@ user-invocable: true
 metadata:
   input:  projects/{slug}/srs/ + projects/{slug}/plan/ + validation output
   output: projects/{slug}/improvement-report.md
-  next:   /sr:save
+  next:   /at:srs-save
 ---
 
-# sr:improve
+# at:srs-improve
 
 Goal: produce a candid improvement report — what was deferred, what carries risk,
 what should be resolved before development starts. Reference specific FR/NFR IDs.
@@ -28,7 +28,7 @@ view_file from `projects/{slug}/`:
 - `spec.md` (for deferred features and open items)
 - `srs/appendix-b-open-issues.md` (for all [TBD] items)
 - `srs/03-03-performance.md` (for [TBD] NFRs)
-- Validator output if available (WARNs from `/sr:validate`)
+- Validator output if available (WARNs from `/at:srs-validate`)
 
 ---
 
@@ -74,7 +74,7 @@ NFRs with adjective-only measure (should have been caught by validator) → rewr
 
 ### §5 — Validation Warnings
 
-Enumerate every WARN from `/sr:validate` with:
+Enumerate every WARN from `/at:srs-validate` with:
 - Warning text
 - Which file/FR/NFR it refers to
 - Recommended resolution (specific action, not "review this")
@@ -102,7 +102,7 @@ NFR gaps:               {count}
 Validation warnings:    {count}
 Process recommendations:{count}
 
-Next: /sr:save → saves project context files for future sessions
+Next: /at:srs-save → saves project context files for future sessions
 ```
 
 

@@ -78,7 +78,7 @@ Output: `[BA] ✓ Level noted: {level} | BA quality: senior (fixed)`
 
 **If `--srs` is present:**
 
-1. Use view_file tool: `projects/{slug}/spec.md`. If missing → output `"Error: projects/{slug}/spec.md not found. Run /sr:spec first or provide requirement text directly."` STOP.
+1. Use view_file tool: `projects/{slug}/spec.md`. If missing → output `"Error: projects/{slug}/spec.md not found. Run /at:srs-spec first or provide requirement text directly."` STOP.
 2. Use view_file tool: `projects/{slug}/brainstorm.md` (optional — read if it exists, skip if not).
 3. If runtime requirement text was ALSO provided alongside `--srs` AND it conflicts with `spec.md` content → note each conflict explicitly. SRS artifact content takes precedence. You will record conflicts in `## Conflicts Detected` section of `requirements.md`.
 

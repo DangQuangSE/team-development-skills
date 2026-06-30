@@ -72,7 +72,7 @@
 
 ## [NEEDS CLARIFICATION]
 
-<!-- Remove section when empty. Items here block /ck:plan. -->
+<!-- Remove section when empty. Items here block /at:plan. -->
 
 - [ ] {ambiguity 1}
 - [ ] {ambiguity 2}

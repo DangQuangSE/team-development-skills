@@ -1,19 +1,19 @@
 ---
-name: sr:plan
+name: at:srs-plan
 description: >
   Phase 4 of the SRS workflow. Reads spec.md and writes one detailed plan file
   per SRS section (§1–§3 + Appendices). Each file is a complete blueprint
   for the corresponding SRS section. No word limit.
 user-invocable: true
 metadata:
-  input:  projects/{slug}/spec.md (from /sr:spec)
+  input:  projects/{slug}/spec.md (from /at:srs-spec)
   output: projects/{slug}/plan/*.md (12 files)
-  next:   /sr:generate  (after user review and approval)
+  next:   /at:srs-generate  (after user review and approval)
   references:
     - .claude/skills/srs-workflow/references/plan-structure-guide.md
 ---
 
-# sr:plan
+# at:srs-plan
 
 Goal: produce 12 plan files — one per SRS section — that serve as unambiguous blueprints
 for SRS generation. No summarizing, no truncation.
@@ -26,7 +26,7 @@ for SRS generation. No summarizing, no truncation.
 ask_question: "Which project to plan? (slug)"
 ```
 
-view_file `projects/{slug}/spec.md`. If missing, tell user to run `/sr:spec` first.
+view_file `projects/{slug}/spec.md`. If missing, tell user to run `/at:srs-spec` first.
 Load `.claude/skills/srs-workflow/references/plan-structure-guide.md`.
 
 ---
@@ -88,15 +88,15 @@ Total: {FR count} FRs ({Essential}/{Conditional}/{Optional})
 ```
 ask_question:
 "Plan is ready. What would you like to do?
- A) Approve → proceed to /sr:generate
+ A) Approve → proceed to /at:srs-generate
  B) Modify a section → which file(s)?
  C) Show a plan file → which one?
- D) Add features → run /sr:brainstorm again to extend"
+ D) Add features → run /at:srs-brainstorm again to extend"
 ```
 
 If B: update the relevant file(s) and return to Step 3.
 If C: display the file content, then return to Step 3.
-If D: instruct user to run `/sr:brainstorm` and update spec, then restart from Step 0.
+If D: instruct user to run `/at:srs-brainstorm` and update spec, then restart from Step 0.
 If A: proceed.
 
 ---
@@ -112,7 +112,7 @@ FRs planned: {total} ({Essential} Essential / {Conditional} Conditional / {Optio
 NFRs planned: {total}
 Open items: {count}
 
-Next: /sr:generate → generates full SRS from this plan (no word limit)
+Next: /at:srs-generate → generates full SRS from this plan (no word limit)
 ```
 
 

@@ -1,5 +1,5 @@
 ---
-name: sr:brainstorm
+name: at:srs-brainstorm
 description: >
   Phase 1 of the SRS workflow. User gives a project topic → AI runs a deep,
   categorized brainstorm (5 mandatory rounds) to fully understand actors,
@@ -9,12 +9,12 @@ user-invocable: true
 metadata:
   input:  A project topic (1 sentence to 1 paragraph)
   output: Collected brainstorm answers saved to projects/{slug}/brainstorm.md
-  next:   /sr:spec
+  next:   /at:srs-spec
   references:
     - .claude/skills/srs-workflow/references/brainstorm-guide.md
 ---
 
-# sr:brainstorm
+# at:srs-brainstorm
 
 Goal: fully understand the project before a single word of spec is written.
 Do NOT write spec, plan, or SRS in this session.
@@ -191,7 +191,7 @@ Open items: {count}
 
 Saved: projects/{slug}/brainstorm.md
 
-Next: /sr:spec → writes the full spec from this brainstorm
+Next: /at:srs-spec → writes the full spec from this brainstorm
 ```
 
 

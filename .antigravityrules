@@ -1,7 +1,7 @@
 # Agent Rules - Execution and Skill Rules
 
 ## 1. Rule Loading
-- At the start of every session, you MUST read and follow the instructions in [antigravity/antigravity_rules.md](file:///d:/GitHub/MySkills/antigravity/antigravity_rules.md).
+- At the start of every session, you MUST read and follow the instructions in [antigravity/README.md](file:///d:/GitHub/MySkills/antigravity/README.md).
 
 ## 2. Skill Execution Constraint
 - Whenever the user initiates a task that matches the description or keywords of a skill in [antigravity/.agents/skills/](file:///d:/GitHub/MySkills/antigravity/.agents/skills/) (such as `srs-workflow`, `srs-generator`, `team`, `team-ba` etc.):

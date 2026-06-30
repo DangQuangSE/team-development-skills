@@ -1,13 +1,13 @@
 ---
-name: ck:brainstorm
-description: Explore and debate solutions before writing code. Use when the user poses a design question, asks "how should I approach X", wants to think through options before committing, or says anything like "let's brainstorm", "what's the best way to...", "I'm not sure how to tackle this", or "should I use X or Y". Always runs before /ck:plan for novel or ambiguous features. No code is written — only: explore → clarify → spec → report.
+name: at:brainstorm
+description: Explore and debate solutions before writing code. Use when the user poses a design question, asks "how should I approach X", wants to think through options before committing, or says anything like "let's brainstorm", "what's the best way to...", "I'm not sure how to tackle this", or "should I use X or Y". Always runs before /at:plan for novel or ambiguous features. No code is written — only: explore → clarify → spec → report.
 user-invocable: true
 ---
 
-# ck:brainstorm — Surface Ideas, Then Decide
+# at:brainstorm — Surface Ideas, Then Decide
 
 **Hard gate: zero implementation code.** Only explore → expand → spec → report.
-Implementation happens later via `/ck:plan → /ck:cook`.
+Implementation happens later via `/at:plan → /at:cook`.
 
 ---
 
@@ -118,13 +118,13 @@ write_to_file **two files**:
 {What the user leaned toward and why — in their words where possible}
 
 ## Open Questions
-{Unresolved items that /ck:plan must address}
+{Unresolved items that /at:plan must address}
 
 ## Risks
 {Top 2–3 risks worth watching}
 ```
 
-**B. Spec file** → `plans/{slug}/spec.md` (from `.claude/skills/ck-brainstorm/references/spec-template.md`)
+**B. Spec file** → `plans/{slug}/spec.md` (from `.claude/skills/at:brainstorm/references/spec-template.md`)
 
 Fill in the template with what was established during Steps 0–4:
 - Populate user stories with P1/P2/P3 from the narrowed direction
@@ -143,8 +143,8 @@ Fill in the template with what was established during Steps 0–4:
 Ask via `ask_question`:
 
 **"Spec written at `plans/{slug}/spec.md`. What next?"**
-- `→ /ck:plan plans/{slug}/spec.md` — proceed to planning
-- `→ /ck:journal` — archive, no plan yet
+- `→ /at:plan plans/{slug}/spec.md` — proceed to planning
+- `→ /at:journal` — archive, no plan yet
 - `Keep exploring` — return to Step 1 or Step 3
 
 

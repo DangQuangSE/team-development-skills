@@ -1,19 +1,19 @@
 ---
-name: sr:generate
+name: at:srs-generate
 description: >
   Phase 6 of the SRS workflow. Reads approved plan files and generates a complete
   IEEE 830-compliant SRS — one file per section, no word limit.
   A full SRS may span 300+ pages across all files.
 user-invocable: true
 metadata:
-  input:  projects/{slug}/plan/*.md (approved by user via /sr:plan)
+  input:  projects/{slug}/plan/*.md (approved by user via /at:srs-plan)
   output: projects/{slug}/srs/*.md (11 section files + master index)
-  next:   /sr:validate
+  next:   /at:srs-validate
   references:
     - .claude/skills/srs-generator/references/srs-template.md
 ---
 
-# sr:generate
+# at:srs-generate
 
 Goal: produce a complete, publication-ready IEEE 830 SRS.
 No word limit. Each section file must be fully written — no placeholders,
@@ -28,7 +28,7 @@ ask_question: "Which project to generate SRS for? (slug)"
 ```
 
 view_file all files in `projects/{slug}/plan/`.
-If plan files don't exist or are incomplete: tell user to run `/sr:plan` first.
+If plan files don't exist or are incomplete: tell user to run `/at:srs-plan` first.
 
 Run the readiness gate before writing anything:
 ```bash
@@ -37,10 +37,10 @@ python .claude/scripts/plan_validator.py --dir projects/{slug}/plan/
 
 - **BLOCKED** (ERRORs found, e.g. missing file, FR numbering gap, missing "shall"
   clause, bad priority tag): stop here. List the ERRORs and tell the user to fix
-  them via `/sr:plan` before retrying `/sr:generate`.
+  them via `/at:srs-plan` before retrying `/at:srs-generate`.
 - **READY WITH WARNINGS** (e.g. unresolved `[NEEDS USER INPUT]` not yet logged in
   appendix-b-open-issues.md): show the warnings and ask the user to confirm
-  proceeding anyway, or go back to `/sr:plan` to resolve them.
+  proceeding anyway, or go back to `/at:srs-plan` to resolve them.
 - **READY**: proceed to Step 1.
 
 Load `.claude/skills/srs-generator/references/srs-template.md`.
@@ -164,7 +164,7 @@ Files: 11 section files + 00-master-index.md
 FRs:  {total} ({Essential}/{Conditional}/{Optional})
 NFRs: {total} ({confirmed} confirmed / {TBD} [TBD])
 
-Next: /sr:validate → validates SRS against IEEE 830-1998
+Next: /at:srs-validate → validates SRS against IEEE 830-1998
 ```
 
 

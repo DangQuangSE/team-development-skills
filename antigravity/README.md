@@ -42,7 +42,61 @@ Dưới đây là bảng tra cứu nhanh toàn bộ 10 lệnh custom được h�
 
 ---
 
-## 3. Chi Tiết Hướng Dẫn Sử Dụng Từng Lệnh
+## 3. Các Lệnh Chat Workflows (Slash Commands / Skills)
+
+Đây là các lệnh và quy trình bạn có thể **gõ trực tiếp trong ô chat** để điều khiển Antigravity Agent. Agent sẽ nhận diện từ khóa và tự động nạp các Skill/Agent tương ứng trong [antigravity/.agents/](file:///d:/GitHub/MySkills/antigravity/.agents).
+
+### A. Quy trình đặc tả yêu cầu (SRS Skills)
+*   **`/at:srs-flow` (Quy trình SRS đầy đủ - Khuyên dùng)**
+    *   *Công dụng:* Khảo sát yêu cầu sâu end-to-end từ một ý tưởng thô và sinh ra tài liệu đặc tả chuẩn IEEE 830-1998 hoàn chỉnh.
+    *   *Quy trình:* Brainstorm $\rightarrow$ Viết Spec nháp $\rightarrow$ Phân chia Plan $\rightarrow$ Sinh tài liệu SRS $\rightarrow$ Auto-Validate bằng code $\rightarrow$ Viết báo cáo cải tiến $\rightarrow$ Lưu ngữ cảnh dự án.
+*   **`/at:srs` (Sinh nhanh tài liệu SRS)**
+    *   *Công dụng:* Sinh nhanh tài liệu đặc tả IEEE 830-1998 từ một danh sách các yêu cầu có sẵn (không qua các vòng phỏng vấn brainstorm).
+
+#### Các bước nhỏ chạy độc lập (SRS Sub-commands):
+*   **`/at:srs-brainstorm`**: Chạy riêng Phase 1 - phỏng vấn sâu 5 vòng để hiểu rõ actors, tính năng, phạm vi in/out, ràng buộc công nghệ và quy luật nghiệp vụ.
+*   **`/at:srs-spec`**: Chạy riêng Phase 2 - biên dịch dữ liệu brainstorm thành file đặc tả nháp `spec.md`.
+*   **`/at:srs-plan`**: Chạy riêng Phase 4 - lập kế hoạch viết tài liệu SRS theo từng phân mục.
+*   **`/at:srs-generate`**: Chạy riêng Phase 6 - sinh tài liệu SRS chuẩn IEEE 830 hoàn chỉnh.
+*   **`/at:srs-validate`**: Chạy riêng Phase 7 - tự động chạy script `srs_validator.py` kiểm định lỗi logic và nhãn TBD.
+*   **`/at:srs-improve`**: Chạy riêng Phase 8 - phân tích lỗi xác thực và sinh báo cáo cải thiện chất lượng SRS.
+*   **`/at:srs-save`**: Chạy riêng Phase 9 - đóng gói lưu trữ ngữ cảnh dự án.
+
+### B. Nhóm lệnh mô phỏng đội dự án (Virtual Team Skills)
+*   **`/team` (Chạy toàn bộ đội dự án)**
+    *   *Công dụng:* Mô phỏng đội phát triển phần mềm gồm 7 vai trò AI chạy tự động từ đầu đến cuối để xây dựng dự án.
+    *   *Cú pháp:* `/team "yêu cầu tính năng" --project {tên_dự_án} --level {fresh|junior|mid|senior}`
+*   **`/team-list`**: Liệt kê thông tin chi tiết và chức năng của từng thành viên trong đội dự án ảo.
+*   **Các lệnh gọi vai trò đơn lẻ:**
+    *   `/team-ba`: Khảo sát, phân tích nghiệp vụ và viết User Stories.
+    *   `/team-techlead`: Thiết kế kiến trúc, Tech-stack, sơ đồ ERD/Sequence và viết ADR (Architecture Decision Record).
+    *   `/team-pm`: Lập kế hoạch Sprint, chia nhỏ Task và ước lượng Story Points.
+    *   `/team-dev` (hoặc `/team-be`, `/team-fe`): Lập trình mã nguồn Frontend/Backend và viết PR (Pull Request) description.
+    *   `/team-test`: Lập kế hoạch kiểm thử, sinh test case (Unit, Integration, E2E) và mẫu báo cáo bug.
+    *   `/team-qa`: Đánh giá mức độ tuân thủ quy trình, bảo mật và phê duyệt phát hành dự án (Sign-off).
+
+### C. Lệnh quy trình phát triển cốt lõi (Core Commands)
+*   **`/at:brainstorm` (Khảo sát và thảo luận giải pháp)**
+    *   *Công dụng:* Khảo sát cấu trúc mã nguồn hiện tại, đặt câu hỏi làm rõ và thảo luận thiết kế trước khi lập kế hoạch (không sửa code).
+*   **`/at:plan` (Lập kế hoạch triển khai)**
+    *   *Công dụng:* Sinh tài liệu kế hoạch triển khai chi tiết cho một tính năng.
+    *   *Các chế độ:* `--fast` (lập plan nhanh trực tiếp), `--hard` (plan nghiên cứu kỹ + red-team kiểm định).
+*   **`/at:cook` (Bắt đầu viết code)**
+    *   *Công dụng:* Từng bước đọc kế hoạch và tiến hành sửa đổi, bổ sung code nguồn cho dự án theo đúng thiết kế.
+*   **`/at:fix` (Sửa lỗi tự động)**
+    *   *Công dụng:* Tự động quét và phát hiện các lỗi build, lint, compiler hoặc test đang thất bại và đề xuất sửa chữa.
+
+### D. Các Skill hỗ trợ tư duy (Helper Reasoning Skills)
+*   **`strategic-compact`**: Tự động gợi ý nén bớt ngữ cảnh hội thoại khi dung lượng token vượt quá ngưỡng để tiết kiệm bộ nhớ.
+*   **`skill-creator`**: Cho phép AI tự động biên soạn và cải tiến các tệp kỹ năng (`SKILL.md`) để bổ sung năng lực mới.
+*   **`sequential-thinking`**: Hướng dẫn AI tư duy phân tích tuần tự từng bước một cách chặt chẽ trước khi đưa ra câu trả lời.
+*   **`problem-solving`**: Cung cấp các công cụ tư duy giải quyết vấn đề khó (như Inversion exercise, Scale game, Collision-zone thinking).
+*   **`mermaidjs-v11`**: Hướng dẫn AI cách vẽ và thiết kế biểu đồ Mermaid.js phiên bản v11 đúng chuẩn, đẹp và không lỗi cú pháp.
+*   **`playwright-skill`**: Kỹ năng tự động hóa trình duyệt sử dụng Playwright để phục vụ cho chụp ảnh mockup hoặc test E2E.
+
+---
+
+## 4. Hướng Dẫn Sử Dụng Chi Tiết Các Lệnh CLI (Terminal)
 
 ### 1. `coding-level`
 Thiết lập độ sâu giải thích code của AI Agent.
@@ -78,25 +132,9 @@ Tạo slide thuyết trình và hình ảnh mockup mạng xã hội.
 *   **Thực thi:** `python antigravity/run.py learn`
 *   *Lưu trữ:* File skill học được sẽ tự động lưu vào thư mục `antigravity/.agents/skills/learned/` để hệ thống tự nhận diện sau này.
 
-### 7. `/at:brainstorm` (Chat)
-Bắt đầu một cuộc thảo luận giải pháp kỹ thuật trước khi làm.
-*   **Cú pháp:** `/at:brainstorm`
-
-### 8. `/at:plan` (Chat)
-Lập kế hoạch triển khai dự án.
-*   **Cú pháp:** `/at:plan --fast` (lập kế hoạch nhanh) hoặc `/at:plan --hard` (nghiên cứu sâu + Red-team phản biện).
-
-### 9. `/at:cook` (Chat)
-Triển khai viết code theo kế hoạch.
-*   **Cú pháp:** `/at:cook`
-
-### 10. `/at:fix` (Chat)
-Sửa lỗi nhanh compiler/test.
-*   **Cú pháp:** `/at:fix`
-
 ---
 
-## 4. Quản Lý Vòng Đời Tệp (Artifacts)
+## 5. Quản Lý Vòng Đời Tệp (Artifacts)
 
 *   **`implementation_plan.md`**: Kế hoạch thiết kế được AI tạo ra ở bước đầu tiên, nằm trong thư mục `brain/` của phiên chat.
 *   **`task.md`**: Danh sách đầu việc cần làm (chỉ được tạo sau khi kế hoạch được phê duyệt). **Pre-commit hook** sẽ dựa trên tệp này để biết dự án đang ở giai đoạn viết code.

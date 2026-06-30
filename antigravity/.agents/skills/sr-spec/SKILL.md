@@ -1,16 +1,16 @@
 ---
-name: sr:spec
+name: at:srs-spec
 description: >
   Phase 2 of the SRS workflow. Reads projects/{slug}/brainstorm.md and writes
   a comprehensive spec.md. No word limit.
 user-invocable: true
 metadata:
-  input:  projects/{slug}/brainstorm.md (from /sr:brainstorm)
+  input:  projects/{slug}/brainstorm.md (from /at:srs-brainstorm)
   output: projects/{slug}/spec.md
-  next:   /sr:plan
+  next:   /at:srs-plan
 ---
 
-# sr:spec
+# at:srs-spec
 
 Goal: turn the brainstorm output into a structured, comprehensive spec.
 No word limit — every section must be fully written.
@@ -26,7 +26,7 @@ ask_question: "Which project to write spec for? (slug name or path to brainstorm
 ```
 
 view_file `projects/{slug}/brainstorm.md`. If it doesn't exist, tell the user to run
-`/sr:brainstorm` first.
+`/at:srs-brainstorm` first.
 
 ---
 
@@ -118,7 +118,7 @@ Business rules: {count}
 NFR baselines:  {count confirmed} confirmed, {count TBD} [TBD]
 Open items:     {count}
 
-Next: /sr:plan → breaks this spec into per-section SRS plan files
+Next: /at:srs-plan → breaks this spec into per-section SRS plan files
 ```
 
 

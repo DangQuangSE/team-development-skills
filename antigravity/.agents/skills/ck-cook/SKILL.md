@@ -1,10 +1,10 @@
 ---
-name: ck:cook
+name: at:cook
 description: Implement a planned feature phase by phase. Use when the user says "cook this", "implement it", "let's build", "start coding", or passes a plan.md path. Spec-aware — auto-loads spec.md alongside plan for SDD+TDD. Modes (pick one): --fast (skip test/review), --hard (mandatory human approval). Composable flags (combine with any mode): --no-test (skip tester), --tdd (write failing tests before implementing).
 user-invocable: true
 ---
 
-# ck:cook — Structured Implementation Pipeline
+# at:cook — Structured Implementation Pipeline
 
 Modes — mutually exclusive, pick one (default = Standard):
 - **Standard** — test + review, auto-approve if score ≥ 9.5 with 0 CRITICAL
@@ -21,7 +21,7 @@ Composable flags — combine with any mode:
 
 When no plan path provided:
 1. Search `plans/` for any `plan.md` → ask: "Found `{path}`. Use this? [Y/n]"
-2. If none found → ask: "No plan found. Continue anyway? [y/N]" — if No, suggest `/ck:plan`
+2. If none found → ask: "No plan found. Continue anyway? [y/N]" — if No, suggest `/at:plan`
 
 After resolving plan path: check for `spec.md` in the same directory. If found, load it — activates **spec-driven mode** for Steps 1 and 2.
 

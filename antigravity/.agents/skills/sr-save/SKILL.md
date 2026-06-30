@@ -1,5 +1,5 @@
 ---
-name: sr:save
+name: at:srs-save
 description: >
   Phase 9 of the SRS workflow. Saves all project context to _context/ files
   so future Claude sessions can resume without re-reading the full SRS.
@@ -9,7 +9,7 @@ metadata:
   output: projects/{slug}/_context/*.md (6 context files)
 ---
 
-# sr:save
+# at:srs-save
 
 Goal: distil the entire project into compact, re-loadable context files.
 A future session should be able to load just `_context/` and have full project understanding.

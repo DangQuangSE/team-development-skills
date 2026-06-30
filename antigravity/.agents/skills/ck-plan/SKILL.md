@@ -1,10 +1,10 @@
 ---
-name: ck:plan
-description: Plan a feature or system before implementation. Use when the user says "plan this", "I want to build X", "how do I implement Y", or when /ck:brainstorm produces a spec.md. Always run before /ck:cook. Modes (pick one): --fast (simple, single-file), --hard (research + red-team + validate). Composable flags (combine with any mode): --no-test, --tdd — propagate into the cook pipeline.
+name: at:plan
+description: Plan a feature or system before implementation. Use when the user says "plan this", "I want to build X", "how do I implement Y", or when /at:brainstorm produces a spec.md. Always run before /at:cook. Modes (pick one): --fast (simple, single-file), --hard (research + red-team + validate). Composable flags (combine with any mode): --no-test, --tdd — propagate into the cook pipeline.
 user-invocable: true
 ---
 
-# ck:plan — Structured Planning Pipeline
+# at:plan — Structured Planning Pipeline
 
 ---
 
@@ -28,7 +28,7 @@ Mode auto-detection (override with explicit flag):
 
 If scope is too large: suggest splitting and **wait for user confirmation**.
 
-If **Hard** and novel/ambiguous with no brainstorm report: "No brainstorm found. Run `/ck:brainstorm` first? [Y/n]" — if Yes, stop; if No, proceed.
+If **Hard** and novel/ambiguous with no brainstorm report: "No brainstorm found. Run `/at:brainstorm` first? [Y/n]" — if Yes, stop; if No, proceed.
 
 If a spec file path is provided or `plans/{slug}/spec.md` exists adjacent to any plan: run a **Spec Quality Check** inline:
 
@@ -103,7 +103,7 @@ Output the exact cook command:
 
 ```
 Ready to cook:
-/ck:cook [--fast | --hard] [--no-test | --tdd] plans/{slug}/plan.md
+/at:cook [--fast | --hard] [--no-test | --tdd] plans/{slug}/plan.md
 ```
 
 ---
