@@ -16,24 +16,12 @@ def main():
     hook_content = """#!/bin/sh
 # Antigravity Git Validation Hook Gateway
 
-# 1. Check planning approval
-python antigravity/hooks/pre_tool_validator.py --check-plan
+# Run the optimized staged check in Python
+python antigravity/hooks/pre_tool_validator.py --check-staged
 if [ $? -ne 0 ]; then
-  echo "Git commit blocked: Planning approval check failed."
+  echo "Git commit blocked: Validation check failed."
   exit 1
 fi
-
-# 2. Check staged files
-staged_files=$(git diff --cached --name-only)
-for file in $staged_files; do
-  if [ -f "$file" ]; then
-    python antigravity/hooks/pre_tool_validator.py --tool write_to_file --file "$file"
-    if [ $? -ne 0 ]; then
-      echo "Git commit blocked: Validation failed for file: $file"
-      exit 1
-    fi
-  fi
-done
 
 exit 0
 """

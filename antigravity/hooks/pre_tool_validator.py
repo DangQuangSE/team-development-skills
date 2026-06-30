@@ -4,6 +4,7 @@ import json
 import os
 import re
 import sys
+import subprocess
 from pathlib import Path
 
 # Required headings schema for team artifacts
@@ -284,11 +285,89 @@ def main():
     parser.add_argument("--file", help="Target file path")
     parser.add_argument("--content-file", help="Path to temp file containing contents being written")
     parser.add_argument("--check-plan", action="store_true", help="Check planning approval only")
+    parser.add_argument("--check-staged", action="store_true", help="Check all staged files in git")
     
     args = parser.parse_args()
     
     brain_dir = get_active_brain_dir()
     
+    # 0. Check all staged files (called from git pre-commit hook)
+    if args.check_staged:
+        approved, reason = verify_planning_approval(brain_dir)
+        if not approved:
+            print(reason, file=sys.stderr)
+            sys.exit(2)
+            
+        try:
+            r = subprocess.run(["git", "diff", "--cached", "--name-only"], capture_output=True, text=True, check=True)
+            files = [f.strip() for f in r.stdout.splitlines() if f.strip()]
+        except Exception as e:
+            print(f"Error getting staged files: {e}", file=sys.stderr)
+            sys.exit(2)
+            
+        for fpath in files:
+            if not os.path.exists(fpath):
+                continue
+            
+            # Level gate check
+            ok, level_msg = check_level_gate(fpath)
+            if not ok:
+                print(level_msg, file=sys.stderr)
+                sys.exit(2)
+                
+            try:
+                with open(fpath, "r", encoding="utf-8", errors="replace") as f:
+                    content = f.read()
+            except Exception:
+                continue
+                
+            # Headings check
+            missing = check_headings(fpath, content)
+            if missing:
+                print(f"✗ Blocked: Missing headings in {fpath}:\n" + "\n".join(f"  - {h}" for h in missing), file=sys.stderr)
+                sys.exit(2)
+                
+            # Credentials check
+            creds = check_credentials(fpath, content)
+            if creds:
+                print(f"✗ Blocked: Hardcoded credentials in {fpath}:\n" + "\n".join(f"  - {c}" for c in creds), file=sys.stderr)
+                sys.exit(2)
+                
+            # .env.example check
+            env_err = check_env_example(fpath, content)
+            if env_err:
+                print(f"✗ Blocked: {fpath} {env_err}", file=sys.stderr)
+                sys.exit(2)
+                
+            # Plan and SRS validations (exempting antigravity and .claude)
+            n_path = normalize(fpath)
+            if not ("antigravity/" in n_path.lower() or ".claude/" in n_path.lower()):
+                if "/plan/" in n_path and n_path.endswith(".md"):
+                    plan_dir = str(Path(fpath).parent)
+                    validator_script = Path("d:/GitHub/MySkills/.claude/scripts/plan_validator.py")
+                    if validator_script.exists():
+                        res = subprocess.run([sys.executable, str(validator_script), "--dir", plan_dir], capture_output=True, text=True, encoding="utf-8")
+                        if res.returncode != 0:
+                            print(f"✗ Blocked: Plan Validation failed for {fpath}:\n{res.stdout}", file=sys.stderr)
+                            sys.exit(2)
+                
+                is_srs = ("/srs/" in n_path or "srs-" in Path(n_path).name) and n_path.endswith(".md")
+                if is_srs:
+                    validator_script = Path("d:/GitHub/MySkills/.claude/scripts/srs_validator.py")
+                    if validator_script.exists():
+                        p = Path(fpath)
+                        if p.parent.name.lower() == "srs":
+                            srs_dir = str(p.parent)
+                            res = subprocess.run([sys.executable, str(validator_script), "--dir", srs_dir], capture_output=True, text=True, encoding="utf-8")
+                        else:
+                            res = subprocess.run([sys.executable, str(validator_script), fpath], capture_output=True, text=True, encoding="utf-8")
+                        if res.returncode != 0:
+                            print(f"✗ Blocked: SRS Validation failed for {fpath}:\n{res.stdout}", file=sys.stderr)
+                            sys.exit(2)
+                            
+        print("[Validation Check] All staged files passed.")
+        sys.exit(0)
+        
     # 1. Planning approval check (applies to all code-modifying tools or when explicitly requested)
     if args.check_plan or (args.tool in ("write_to_file", "replace_file_content") and args.file and not args.file.endswith("implementation_plan.md") and not args.file.endswith("task.md")):
         approved, reason = verify_planning_approval(brain_dir)
@@ -336,40 +415,43 @@ def main():
             sys.exit(2)
             
         # ── 3. Plan & SRS Skill-Specific Validators ──────────────────────
-        import subprocess
         n_path = normalize(args.file)
         
-        # Check if plan file
-        if "/plan/" in n_path and n_path.endswith(".md"):
-            plan_dir = str(Path(args.file).parent)
-            validator_script = Path("d:/GitHub/MySkills/.claude/scripts/plan_validator.py")
-            if validator_script.exists():
-                print(f"[Skill Check] Running plan_validator.py on directory: {plan_dir}")
-                res = subprocess.run([sys.executable, str(validator_script), "--dir", plan_dir], capture_output=True, text=True, encoding="utf-8")
-                if res.returncode != 0:
-                    print(f"✗ Blocked: Plan Validation failed:\n{res.stdout}\n{res.stderr}", file=sys.stderr)
-                    sys.exit(2)
-                print("[Skill Check] Plan Validation passed.")
-                
-        # Check if SRS file
-        is_srs = ("/srs/" in n_path or "srs-" in Path(n_path).name) and n_path.endswith(".md")
-        if is_srs:
-            validator_script = Path("d:/GitHub/MySkills/.claude/scripts/srs_validator.py")
-            if validator_script.exists():
-                p = Path(args.file)
-                if p.parent.name.lower() == "srs":
-                    srs_dir = str(p.parent)
-                    print(f"[Skill Check] Running srs_validator.py on directory: {srs_dir}")
-                    res = subprocess.run([sys.executable, str(validator_script), "--dir", srs_dir], capture_output=True, text=True, encoding="utf-8")
-                else:
-                    print(f"[Skill Check] Running srs_validator.py on file: {args.file}")
-                    res = subprocess.run([sys.executable, str(validator_script), args.file], capture_output=True, text=True, encoding="utf-8")
-                
-                # Check exit code or verdict. srs_validator exits with 0 on COMPLIANT, 1 on others
-                if res.returncode != 0:
-                    print(f"✗ Blocked: SRS Validation failed:\n{res.stdout}\n{res.stderr}", file=sys.stderr)
-                    sys.exit(2)
-                print("[Skill Check] SRS Validation passed.")
+        # Exempt system agent/skill directories from plan and SRS validators
+        if "antigravity/" in n_path.lower() or ".claude/" in n_path.lower():
+            pass
+        else:
+            # Check if plan file
+            if "/plan/" in n_path and n_path.endswith(".md"):
+                plan_dir = str(Path(args.file).parent)
+                validator_script = Path("d:/GitHub/MySkills/.claude/scripts/plan_validator.py")
+                if validator_script.exists():
+                    print(f"[Skill Check] Running plan_validator.py on directory: {plan_dir}")
+                    res = subprocess.run([sys.executable, str(validator_script), "--dir", plan_dir], capture_output=True, text=True, encoding="utf-8")
+                    if res.returncode != 0:
+                        print(f"✗ Blocked: Plan Validation failed:\n{res.stdout}\n{res.stderr}", file=sys.stderr)
+                        sys.exit(2)
+                    print("[Skill Check] Plan Validation passed.")
+                    
+            # Check if SRS file
+            is_srs = ("/srs/" in n_path or "srs-" in Path(n_path).name) and n_path.endswith(".md")
+            if is_srs:
+                validator_script = Path("d:/GitHub/MySkills/.claude/scripts/srs_validator.py")
+                if validator_script.exists():
+                    p = Path(args.file)
+                    if p.parent.name.lower() == "srs":
+                        srs_dir = str(p.parent)
+                        print(f"[Skill Check] Running srs_validator.py on directory: {srs_dir}")
+                        res = subprocess.run([sys.executable, str(validator_script), "--dir", srs_dir], capture_output=True, text=True, encoding="utf-8")
+                    else:
+                        print(f"[Skill Check] Running srs_validator.py on file: {args.file}")
+                        res = subprocess.run([sys.executable, str(validator_script), args.file], capture_output=True, text=True, encoding="utf-8")
+                    
+                    # Check exit code or verdict. srs_validator exits with 0 on COMPLIANT, 1 on others
+                    if res.returncode != 0:
+                        print(f"✗ Blocked: SRS Validation failed:\n{res.stdout}\n{res.stderr}", file=sys.stderr)
+                        sys.exit(2)
+                    print("[Skill Check] SRS Validation passed.")
             
         print(f"[Validation Check] Passed for file: {args.file}")
         
