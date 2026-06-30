@@ -23,7 +23,7 @@ Các quy tắc dưới đây được quy định trong cấu hình hệ thống
 
 ---
 
-## 2. Hướng Dẫn Sử Dụng Các Câu Lệnh (CLI Commands)
+## 2. Hướng Dẫn Sử Dụng Các Câu Lệnh CLI (Terminal Commands)
 
 Chúng ta có một bộ chạy lệnh bằng Python tại [run.py](file:///d:/GitHub/MySkills/antigravity/run.py) thay thế cho các lệnh `/cl:` hay `/ck:` của Claude Code. 
 
@@ -55,22 +55,41 @@ Lệnh này tự động quét các file bạn đã chỉnh sửa cục bộ (ch
     *   Chạy kiểm thử bảo mật, rà soát credentials và format.
     *   Tự động tìm kiếm dự án Node/TS, .NET hoặc Python để chạy các lệnh build và test tự động.
 
-### C. Xem hướng dẫn các lệnh Workflow (`brainstorm` & `plan`)
-Đây là các lệnh hướng dẫn quy trình, bạn chạy qua Terminal để xem thông tin:
-```bash
-python antigravity/run.py brainstorm
-python antigravity/run.py plan
-```
-
 ---
 
-## 3. Hệ Thống Skill & Agent chuyển đổi
+## 3. Các Lệnh Chat Workflows (Slash Commands / Skills)
 
-Các Agent và Skill của Claude Code đã được thiết kế lại để tương thích hoàn toàn với các công cụ của Antigravity (như `view_file`, `write_to_file`, `replace_file_content`, `run_command`...):
+Đây là các lệnh và quy trình bạn có thể **gõ trực tiếp trong ô chat** để điều khiển Antigravity Agent. Agent sẽ nhận diện từ khóa và tự động nạp các Skill/Agent tương ứng trong [antigravity/.agents/](file:///d:/GitHub/MySkills/antigravity/.agents).
 
-*   **Các Agent cấu hình:** Nằm trong thư mục [antigravity/.agents/](file:///d:/GitHub/MySkills/antigravity/.agents) (ví dụ: `planner.md`, `code-reviewer.md`, `tester.md`).
-*   **Các Skill chi tiết:** Nằm trong thư mục [antigravity/.agents/skills/](file:///d:/GitHub/MySkills/antigravity/.agents/skills/) (ví dụ: `srs-workflow`, `srs-generator`, `team`).
-    *   *Cách gọi trực tiếp trong chat:* Nhắn tin chứa từ khóa kích hoạt, ví dụ: `/at:srs-flow` hoặc `/at:srs` để chạy quy trình tương ứng.
+### A. Nhóm lệnh đặc tả yêu cầu (SRS Skills)
+*   **`/at:srs-flow` (Quy trình SRS đầy đủ - Khuyên dùng)**
+    *   *Công dụng:* Khảo sát yêu cầu sâu end-to-end từ một ý tưởng thô và sinh ra tài liệu đặc tả chuẩn IEEE 830-1998 hoàn chỉnh.
+    *   *Quy trình:* Brainstorm (phỏng vấn nhiều vòng) $\rightarrow$ Viết Spec nháp $\rightarrow$ Phân chia Plan $\rightarrow$ Sinh tài liệu SRS $\rightarrow$ Auto-Validate bằng code $\rightarrow$ Viết báo cáo cải tiến $\rightarrow$ Lưu ngữ cảnh dự án.
+*   **`/at:srs` (Sinh nhanh tài liệu SRS)**
+    *   *Công dụng:* Sinh nhanh tài liệu đặc tả IEEE 830-1998 từ một danh sách các yêu cầu có sẵn (không qua các vòng phỏng vấn brainstorm).
+
+### B. Nhóm lệnh mô phỏng đội dự án (Virtual Team Skills)
+*   **`/team` (Chạy toàn bộ đội dự án)**
+    *   *Công dụng:* Mô phỏng đội phát triển phần mềm gồm 7 vai trò AI chạy tự động từ đầu đến cuối để xây dựng dự án.
+    *   *Cú pháp:* `/team "yêu cầu tính năng" --project {tên_dự_án} --level {fresh|junior|mid|senior}`
+*   **Các lệnh gọi vai trò đơn lẻ:**
+    *   `/team-ba`: Khảo sát, phân tích nghiệp vụ và viết User Stories.
+    *   `/team-techlead`: Thiết kế kiến trúc, Tech-stack, sơ đồ ERD/Sequence và viết ADR (Architecture Decision Record).
+    *   `/team-pm`: Lập kế hoạch Sprint, chia nhỏ Task và ước lượng Story Points.
+    *   `/team-dev` (hoặc `/team-be`, `/team-fe`): Lập trình mã nguồn Frontend/Backend và viết PR (Pull Request) description.
+    *   `/team-test`: Lập kế hoạch kiểm thử, sinh test case (Unit, Integration, E2E) và mẫu báo cáo bug.
+    *   `/team-qa`: Đánh giá mức độ tuân thủ quy trình, bảo mật và phê duyệt phát hành dự án (Sign-off).
+
+### C. Nhóm lệnh quy trình phát triển cốt lõi (Core Commands)
+*   **`/at:brainstorm` (Khảo sát và thảo luận giải pháp)**
+    *   *Công dụng:* Khảo sát cấu trúc mã nguồn hiện tại, đặt câu hỏi làm rõ thiết kế trước khi bắt đầu code. Không viết code ở bước này.
+*   **`/at:plan` (Lập kế hoạch triển khai)**
+    *   *Công dụng:* Sinh tài liệu kế hoạch triển khai chi tiết cho một tính năng.
+    *   *Các chế độ:* `--fast` (lập plan nhanh trực tiếp), `--hard` (plan nghiên cứu kỹ + red-team kiểm định).
+*   **`/at:cook` (Bắt đầu viết code)**
+    *   *Công dụng:* Từng bước đọc kế hoạch và tiến hành sửa đổi, bổ sung code nguồn cho dự án theo đúng thiết kế.
+*   **`/at:fix` (Sửa lỗi tự động)**
+    *   *Công dụng:* Tự động quét và phát hiện các lỗi build, lint, compiler hoặc test đang thất bại và đề xuất sửa chữa.
 
 ---
 
