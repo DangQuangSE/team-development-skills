@@ -11,7 +11,8 @@ A collection of development-focused Claude Code skills — code review, problem-
 | `ck:brainstorm` | `/ck:brainstorm` | Explore and debate before committing to code |
 | `ck:cook` | `/ck:cook` | Implement planned features phase by phase |
 | `ck:fix` | `/ck:fix` | Fix bugs using structured diagnosis |
-| `ck:plan` | `/ck:plan` | Plan features before implementation |
+| `ck:plan` | `/ck:plan` | Plan features before implementation (markdown) |
+| `ck:plan-json` | `/ck:plan-json` | Create structured JSON plans for AI-driven execution |
 | `code-review` | `/code-review` | Structured code reviews with verification |
 | `mermaidjs-v11` | `/mermaidjs-v11` | Generate diagrams (flowcharts, ERD, sequence, etc.) |
 | `playwright-skill` | `/playwright-skill` | Browser automation and UI testing |

@@ -59,6 +59,16 @@
         ]
       },
       {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node hooks/run.js skills/ck-plan-json/hooks/plan_validator.py",
+            "timeout": 10
+          }
+        ]
+      },
+      {
         "matcher": "Retry",
         "hooks": [
           {

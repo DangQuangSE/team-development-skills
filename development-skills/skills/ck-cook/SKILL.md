@@ -19,21 +19,50 @@ Composable flags — combine with any mode:
 
 ### Step 0 — Plan Check
 
-When no plan path provided:
-1. Search `plans/` for any `plan.md` → ask: "Found `{path}`. Use this? [Y/n]"
-2. If none found → ask: "No plan found. Continue anyway? [y/N]" — if No, suggest `/ck:plan`
+Accept plan in two formats:
+- **JSON** (preferred) — `plan.json` with structured steps, status tracking, debug logs
+- **Markdown** (legacy) — `plan.md` + `phase-XX-*.md` files
 
-After resolving plan path: check for `spec.md` in the same directory. If found, load it — activates **spec-driven mode** for Steps 1 and 2.
+When no plan path provided:
+1. Search `plans/` for `plan.json` → if found, ask: "Found `{path}` (JSON plan). Use this? [Y/n]"
+2. If no plan.json: search for any `plan.md` → ask: "Found `{path}` (markdown plan). Use this? [Y/n]"
+3. If none found → ask: "No plan found. Continue anyway? [y/N]" — if No, suggest `/ck:plan-json` or `/ck:plan`
+
+Also accept:
+- **`--json <path>`** — explicitly use a JSON plan at `{path}`
+- **`--plan <path>`** — explicitly use a markdown plan at `{path}`
+
+After resolving plan path:
+- If JSON plan: read as JSON object
+- If markdown plan: check for `spec.md` in same directory
 
 ---
 
 ### Step 1 — Load Plan / Detect Mode
 
-Report what will be cooked:
+**If JSON plan:**
+
+Read `plan.json`. Report:
+
+```
+Plan: {plan_id} — {goal}
+Step: {current_step}/{total steps}
+Status: {status of current step}
+Mode: {Standard | Fast | Hard}
+Context: {framework} · {architecture}
+```
+
+Find the next pending step starting from `current_step`:
+- If all `status === "completed"`: `"All steps complete. Ready for finalize."`
+- If any step has `status === "failed"`: output `"[RESUME] Failed step {N}: {description}. Debug logs: {count} entries. Retry automatically? [Y/n]"` — if Y, reset status to "in_progress" and proceed.
+
+**If markdown plan (legacy):**
+
+Report:
 
 ```
 Plan: {Feature Name}
-Status: {status from plan.md}
+Status: {from plan.md}
 Mode: {Standard | Fast | Hard}
 Test:  {default | --no-test | --tdd}
 Spec:  {plans/{slug}/spec.md — N P1 stories, N success criteria | none}
@@ -45,13 +74,40 @@ Phases remaining:
 If spec loaded + `--tdd` not set:
 `Spec detected. Consider --tdd: acceptance criteria in spec.md are ready-made test anchors.`
 
-If `## Session Notes` exists in plan.md: output resume state and continue from where it left off.
+If `## Session Notes` exists in plan.md: output resume state and continue.
 
-When no plan file provided: read the feature request, ask 2–3 clarifying questions, proceed once clear.
+When no plan file provided: read the feature request, ask 2–3 clarifying questions, proceed.
 
 ---
 
 ### Step 2 — Implement
+
+**If JSON plan:**
+
+For each step starting from `current_step`, process in order:
+
+1. Read `plan.json` — get step at `steps[{current_step - 1}]`
+2. Set `step.status = "in_progress"` → WRITE updated plan.json
+3. Read `input_files` (if any exist) for context
+4. Implement the step following codebase conventions:
+   - Use `description` as primary instruction
+   - Create/modify files listed in `output_files`
+   - Verify each `success_criteria`
+5. On success:
+   - Set `step.status = "completed"`
+   - Set `step.ai_generated_code = "file1, file2, ..."` (list of files written)
+   - Increment `plan.current_step++`
+   - WRITE updated plan.json
+6. On failure:
+   - Set `step.status = "failed"`
+   - Append to `step.debug_logs`: `{timestamp, error, attempted_fix}`
+   - Retry with different approach (up to 3 cycles)
+   - If still failed after 3: set `step.status = "blocked"`, ask user for guidance
+   - WRITE updated plan.json
+
+**Review Gate** — after each JSON step: same as markdown mode below.
+
+**If markdown plan (legacy):**
 
 For each `phase-XX-*.md` in order:
 
@@ -62,7 +118,7 @@ For each `phase-XX-*.md` in order:
 5. Write (overwrite) `## Session Notes` in plan.md, then mark phase complete `- [x] Phase N: {name}`
 6. Report what was done
 
-**Session Notes template** (overwrite, never append):
+**Session Notes template** (markdown plan only):
 
 ```markdown
 ## Session Notes
@@ -79,7 +135,7 @@ For each `phase-XX-*.md` in order:
 {what cook will do next}
 ```
 
-**Review Gate** — after each phase:
+**Review Gate** — after each phase (both JSON and markdown):
 - **Standard / `--hard`**: pause and wait for user approval
 - **`--fast`**: continue automatically
 
@@ -140,7 +196,9 @@ Spawn **`code-reviewer`**: correctness, security, regressions, quality → APPRO
 
 **[Approval Gate]**: code-reviewer APPROVED required (or `--fast` bypass).
 
-**`project-manager`** (skip `--fast`): mark phases `[x]`, update plan status.
+**`project-manager`** (skip `--fast`):
+- JSON plan: set all remaining steps to `status: "completed"`, set `current_step` to final + 1, WRITE plan.json
+- Markdown plan: mark phases `[x]`, update plan status
 
 **`docs-manager`** (skip `--fast`): update docs, README, API contracts.
 
@@ -153,6 +211,14 @@ Uncovered P1:      {list any, or "none"}
 ```
 
 **`git-manager`** (always): conventional commits → ask to push.
+
+**If JSON plan**: output final plan summary:
+```
+Plan: {plan_id}
+Result: {completed_steps}/{total_steps} steps done
+Failed: {failed_count}
+Debug cycles: {total_debug_logs}
+```
 
 ---
 
