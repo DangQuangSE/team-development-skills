@@ -28,16 +28,20 @@ Parse from the command arguments:
 - **`--level {level}`** — project depth level. Valid values: `fresh` | `junior` | `mid` | `senior`. Required. If not provided, ask: `"Choose a project level: fresh | junior | mid | senior"` and wait for reply.
 - **`--context "{text or path}"`** — extra context. If the value starts with `./` or `/`, use the Read tool to read it as a file. Otherwise treat as inline text. Prepend to your analysis; do NOT write it to any artifact file.
 - **`--spec <path>`** — read a markdown file at `{path}` as primary requirement input. Works with any markdown format (not SRS-specific). The path is relative to the pack root.
+- **`--input-dir <path>`** — custom directory for input artifacts (default: `projects/{slug}/team/`).
+- **`--output-dir <path>`** — custom directory for output artifacts (default: `projects/{slug}/team/ba/`).
+
+Set `$INPUT_DIR` and `$OUTPUT_DIR` from these flags. All artifact paths below use these variables.
 
 ---
 
 ## Step 0.5 — Level Calibration
 
-Use the Read tool: `projects/{slug}/team/.project-config.md`
+Use the Read tool: `$INPUT_DIR/.project-config.md`
 
 **If file exists:** extract the `**level:**` field from `## Project`. Use that level (ignore `--level` arg if different — config is authoritative).
 
-**If file does NOT exist** (standalone BA run): write it now using the `--level` value provided in Step 0:
+**If file does NOT exist** (standalone BA run): use `--level` from Step 0. If also missing → ask: `"[BA] No level configured. Choose: fresh | junior | mid | senior"` and wait for reply. Write the config now:
 
 ```markdown
 # Project Configuration — {slug}
@@ -126,9 +130,9 @@ Before writing any files, synthesize your pre-analysis into conclusions:
 
 ## Step 4 — Write Artifact Files
 
-Write all 4 files completely. Do NOT use placeholders. Write each file in full before starting the next.
+Write all 4 files completely to `$OUTPUT_DIR`. Do NOT use placeholders. Write each file in full before starting the next.
 
-### File 1 — `projects/{slug}/team/ba/requirements.md`
+### File 1 — `$OUTPUT_DIR/requirements.md`
 
 ```markdown
 # Requirements — {Project Name}
@@ -175,7 +179,7 @@ Cover ALL requirements implied by the input. Number from REQ-01.
 No flags detected.
 ```
 
-### File 2 — `projects/{slug}/team/ba/user-stories.md`
+### File 2 — `$OUTPUT_DIR/user-stories.md`
 
 ```markdown
 # User Stories — {Project Name}
@@ -200,7 +204,7 @@ No flags detected.
 
 Derive stories from ALL requirements. Aim for complete coverage. Typical story count: 1–2 stories per REQ unless a requirement naturally encompasses multiple distinct user goals.
 
-### File 3 — `projects/{slug}/team/ba/acceptance-criteria.md`
+### File 3 — `$OUTPUT_DIR/acceptance-criteria.md`
 
 ```markdown
 # Acceptance Criteria — {Project Name}
@@ -227,7 +231,7 @@ Derive stories from ALL requirements. Aim for complete coverage. Typical story c
 
 Include at least one happy-path scenario AND one edge/error scenario per story.
 
-### File 4 — `projects/{slug}/team/ba/business-rules.md`
+### File 4 — `$OUTPUT_DIR/business-rules.md`
 
 ```markdown
 # Business Rules — {Project Name}
@@ -277,7 +281,7 @@ Proceed to Step 5.
 - **Attempt 1 or 2:** Output `[BA] Retrying (attempt {n+1}/3)...` Rewrite ONLY the files that failed, including all required sections. Run validation again from the top of this step.
 - **Attempt 3:** HARD STOP. Write failure log:
 
-`projects/{slug}/validation-errors/ba-attempt-3.md`:
+`$OUTPUT_DIR/../../validation-errors/ba-attempt-3.md`:
 
 ```markdown
 # Validation Error Log — BA Agent
@@ -295,7 +299,7 @@ Output and stop:
 
 ```
 [BA] ✗ Validation failed on attempt 3/3 — HARD STOP
-Error log: projects/{slug}/validation-errors/ba-attempt-3.md
+Error log: $OUTPUT_DIR/../../validation-errors/ba-attempt-3.md
 Action: run /team-ba --project {slug} to retry manually
 ```
 
@@ -306,10 +310,10 @@ Action: run /team-ba --project {slug} to retry manually
 Output:
 
 ```
-[BA] ✓ Written: projects/{slug}/team/ba/requirements.md
-[BA] ✓ Written: projects/{slug}/team/ba/user-stories.md
-[BA] ✓ Written: projects/{slug}/team/ba/acceptance-criteria.md
-[BA] ✓ Written: projects/{slug}/team/ba/business-rules.md
+[BA] ✓ Written: $OUTPUT_DIR/requirements.md
+[BA] ✓ Written: $OUTPUT_DIR/user-stories.md
+[BA] ✓ Written: $OUTPUT_DIR/acceptance-criteria.md
+[BA] ✓ Written: $OUTPUT_DIR/business-rules.md
 [BA] ✓ Validation passed (attempt {n})
 
 BA phase complete.

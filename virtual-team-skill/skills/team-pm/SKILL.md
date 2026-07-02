@@ -23,40 +23,42 @@ Your responsibilities: read the BA user stories and TechLead architecture, then 
 ## Step 0 — Parse Parameters
 
 - **`--project {slug}`** — project identifier. If not provided, use CWD name. Confirm: `"Using project slug: {slug}. Continue? (y/n)"`
-- **`--level {level}`** — project depth level (fresh | junior | mid | senior). Passed from orchestrator. Used as fallback if config is unreadable.
+- **`--level {level}`** — project depth level (fresh | junior | mid | senior). Falls back to asking user if not provided and config file missing.
 - **`--context "{text or path}"`** — extra context. If starts with `./` or `/`, read as file. Otherwise inline text. Prepend to analysis; do NOT write to artifacts.
+- **`--input-dir <path>`** — custom directory for input artifacts (default: `projects/{slug}/team/`).
+- **`--output-dir <path>`** — custom directory for output artifacts (default: `projects/{slug}/team/pm/`).
+
+Set `$INPUT_DIR` and `$OUTPUT_DIR` from these flags. All paths below use these variables.
 
 ---
 
 ## Step 1 — Load Context Chain
 
-Use the Read tool to read ALL BA and TechLead artifacts:
+Use the Read tool to read BA and TechLead artifacts from `$INPUT_DIR`:
 
-**BA artifacts:**
-1. `projects/{slug}/team/ba/requirements.md`
-2. `projects/{slug}/team/ba/user-stories.md`
-3. `projects/{slug}/team/ba/acceptance-criteria.md`
-4. `projects/{slug}/team/ba/business-rules.md`
+**BA artifacts:** `$INPUT_DIR/ba/` — read each available file:
+1. `$INPUT_DIR/ba/requirements.md`
+2. `$INPUT_DIR/ba/user-stories.md`
+3. `$INPUT_DIR/ba/acceptance-criteria.md`
+4. `$INPUT_DIR/ba/business-rules.md`
 
-**TechLead artifacts:**
-5. `projects/{slug}/team/techlead/architecture.md`
-6. `projects/{slug}/team/techlead/tech-stack.md`
-7. `projects/{slug}/team/techlead/ERD.md`
-8. Use Glob tool: `projects/{slug}/team/techlead/ADR-*.md` → read all ADR files found
+**TechLead artifacts:** `$INPUT_DIR/techlead/` — read each available file:
+5. `$INPUT_DIR/techlead/architecture.md`
+6. `$INPUT_DIR/techlead/tech-stack.md`
+7. `$INPUT_DIR/techlead/ERD.md`
+8. Use Glob tool: `$INPUT_DIR/techlead/ADR-*.md` → read all ADR files found
 
-If BA or TechLead artifact directories are missing → output error and STOP.
+If a file is missing → `[WARN] Artifact not found: {filename}`. Proceed with available artifacts. If ALL missing, ask user: "No prior artifacts found. Provide planning requirements via --context, or specify --input-dir with existing artifacts."
 
 ---
 
 ## Step 1.5 — Level Calibration
 
-Use the Read tool: `projects/{slug}/team/.project-config.md`
+Use the Read tool: `$INPUT_DIR/.project-config.md`
 
 - **If exists:** extract `**level:**` from `## Project`. This is the authoritative level.
-- **If missing:** use `--level` arg from Step 0. If also missing → output error and STOP:
-  ```
-  [PM] ✗ No project configuration found. Run /team-ba first to initialize level config.
-  ```
+- **If missing:** use `--level` arg from Step 0.
+- **If also missing:** `[PM] No level configured. Choose: fresh | junior | mid | senior` — ask user and wait for reply.
 
 **PM quality is ALWAYS senior — level adjusts estimation parameters only.**
 
@@ -118,9 +120,9 @@ Before writing files, finalize your planning conclusions:
 
 ## Step 4 — Write Artifact Files
 
-Write all 3 files completely. No placeholders.
+Write all 3 files completely to `$OUTPUT_DIR`. No placeholders.
 
-### File 1 — `projects/{slug}/team/pm/sprint-plan.md`
+### File 1 — `$OUTPUT_DIR/sprint-plan.md`
 
 ```markdown
 # Sprint Plan — {Project Name}
@@ -154,7 +156,7 @@ Write all 3 files completely. No placeholders.
 {Repeat for each sprint}
 ```
 
-### File 2 — `projects/{slug}/team/pm/task-breakdown.md`
+### File 2 — `$OUTPUT_DIR/task-breakdown.md`
 
 ```markdown
 # Task Breakdown — {Project Name}
@@ -175,7 +177,7 @@ Write all 3 files completely. No placeholders.
 
 Include tasks for: all backend implementation, all frontend implementation, database schema and migrations, environment configuration (`.env.example`), and PR descriptions.
 
-### File 3 — `projects/{slug}/team/pm/story-points.md`
+### File 3 — `$OUTPUT_DIR/story-points.md`
 
 ```markdown
 # Story Points — {Project Name}
@@ -231,7 +233,7 @@ Proceed to Step 5.
 - **Attempt 1 or 2:** `[PM] Retrying (attempt {n+1}/3)...` Rewrite failing files. Validate again.
 - **Attempt 3:** HARD STOP. Write:
 
-`projects/{slug}/validation-errors/pm-attempt-3.md`:
+`$OUTPUT_DIR/../../validation-errors/pm-attempt-3.md`:
 ```markdown
 # Validation Error Log — PM Agent
 timestamp: {ISO 8601 UTC}
@@ -246,7 +248,7 @@ recovery: Run /team-pm --project {slug} to retry
 Output and stop:
 ```
 [PM] ✗ Validation failed on attempt 3/3 — HARD STOP
-Error log: projects/{slug}/validation-errors/pm-attempt-3.md
+Error log: $OUTPUT_DIR/../../validation-errors/pm-attempt-3.md
 Action: run /team-pm --project {slug} to retry manually
 ```
 
@@ -293,9 +295,9 @@ Output: `[PM] ✓ TodoWrite: {count} sprint task entries created (status: pendin
 
 Output:
 ```
-[PM] ✓ Written: projects/{slug}/team/pm/sprint-plan.md
-[PM] ✓ Written: projects/{slug}/team/pm/task-breakdown.md
-[PM] ✓ Written: projects/{slug}/team/pm/story-points.md
+[PM] ✓ Written: $OUTPUT_DIR/sprint-plan.md
+[PM] ✓ Written: $OUTPUT_DIR/task-breakdown.md
+[PM] ✓ Written: $OUTPUT_DIR/story-points.md
 [PM] ✓ Validation passed (attempt {n})
 [PM] ✓ TodoWrite: {count} sprint task entries created
 

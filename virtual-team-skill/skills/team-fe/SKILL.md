@@ -22,43 +22,45 @@ Your responsibilities: implement the frontend application based on the TechLead'
 ## Step 0 — Parse Parameters
 
 - **`--project {slug}`** — project identifier. If not provided, use CWD name. Confirm: `"Using project slug: {slug}. Continue? (y/n)"`
-- **`--level {level}`** — project depth level (fresh | junior | mid | senior). Passed from orchestrator. Used as fallback if config is unreadable.
+- **`--level {level}`** — project depth level (fresh | junior | mid | senior). Falls back to asking user if not provided and config file missing.
 - **`--context "{text or path}"`** — extra context. If starts with `./` or `/`, read as file. Otherwise inline text. Prepend to work; do NOT write to artifacts.
+- **`--input-dir <path>`** — custom directory for input artifacts (default: `projects/{slug}/team/`).
+- **`--output-dir <path>`** — custom directory for output artifacts (default: `projects/{slug}/team/fe/`).
+
+Set `$INPUT_DIR` and `$OUTPUT_DIR` from these flags.
 
 ---
 
 ## Step 1 — Load Context Chain
 
-Use the Read tool to read ALL relevant artifacts:
+Use the Read tool to read available artifacts from `$INPUT_DIR`:
 
-**BA artifacts:**
-1. `projects/{slug}/team/ba/user-stories.md`
-2. `projects/{slug}/team/ba/acceptance-criteria.md`
+**BA artifacts:** `$INPUT_DIR/ba/`:
+1. `$INPUT_DIR/ba/user-stories.md`
+2. `$INPUT_DIR/ba/acceptance-criteria.md`
 
-**TechLead artifacts:**
-3. `projects/{slug}/team/techlead/tech-stack.md` — CRITICAL: defines your framework and tooling
-4. `projects/{slug}/team/techlead/architecture.md`
-5. `projects/{slug}/team/techlead/sequence-diagrams.md` — shows UI flow expectations
+**TechLead artifacts:** `$INPUT_DIR/techlead/`:
+3. `$INPUT_DIR/techlead/tech-stack.md` — defines your framework and tooling
+4. `$INPUT_DIR/techlead/architecture.md`
+5. `$INPUT_DIR/techlead/sequence-diagrams.md`
 
-**PM artifacts:**
-6. `projects/{slug}/team/pm/task-breakdown.md` — shows FE tasks assigned
+**PM artifacts:** `$INPUT_DIR/pm/`:
+6. `$INPUT_DIR/pm/task-breakdown.md`
 
-**BE Dev artifacts:**
-7. `projects/{slug}/team/be/pr-description.md` — shows API endpoints and contracts you must call
+**BE Dev artifacts:** `$INPUT_DIR/be/`:
+7. `$INPUT_DIR/be/pr-description.md`
 
-If `tech-stack.md` is missing → output error and STOP.
+For each file: read if exists. If `tech-stack.md` missing → `[WARN] tech-stack.md not found. Provide framework info via --context, or use --input-dir.` Ask user: "What framework and tools are you using? Provide via --context, or run /team-dev first."
 
 ---
 
 ## Step 1.5 — Level Calibration
 
-Use the Read tool: `projects/{slug}/team/.project-config.md`
+Use the Read tool: `$INPUT_DIR/.project-config.md`
 
 - **If exists:** extract `**level:**` from `## Project`. This is the authoritative level.
-- **If missing:** use `--level` arg from Step 0. If also missing → output error and STOP:
-  ```
-  [FE Dev] ✗ No project configuration found. Run /team-ba first to initialize level config.
-  ```
+- **If missing:** use `--level` arg from Step 0.
+- **If also missing:** `[FE Dev] No level configured. Choose: fresh | junior | mid | senior` — ask user and wait for reply.
 
 **Active level profile for frontend code generation:**
 
@@ -116,7 +118,7 @@ Plan your file structure based on the framework:
 
 ## Step 4 — Write Frontend Source Files
 
-Write actual implementation files to `projects/{slug}/team/fe/`.
+Write actual implementation files to `$OUTPUT_DIR`.
 
 **SECURITY RULES — MANDATORY:**
 - Do NOT hardcode API base URLs as string literals if they differ per environment
@@ -149,7 +151,7 @@ For each page, implement the UI behavior specified in the acceptance criteria GW
 
 ## Step 5 — Write `pr-description.md`
 
-Write `projects/{slug}/team/fe/pr-description.md`:
+Write `$OUTPUT_DIR/pr-description.md`:
 
 ```markdown
 # PR: Frontend Implementation — {Project Name}
@@ -213,7 +215,7 @@ Proceed to Step 6.
 - **Attempt 1 or 2:** `[FE Dev] Retrying (attempt {n+1}/3)...` Fix failing files. Validate again.
 - **Attempt 3:** HARD STOP. Write:
 
-`projects/{slug}/validation-errors/fe-attempt-3.md`:
+`$OUTPUT_DIR/../../validation-errors/fe-attempt-3.md`:
 ```markdown
 # Validation Error Log — FE Dev Agent
 timestamp: {ISO 8601 UTC}
@@ -228,7 +230,7 @@ recovery: Run /team-fe --project {slug} to retry
 Output and stop:
 ```
 [FE Dev] ✗ Validation failed on attempt 3/3 — HARD STOP
-Error log: projects/{slug}/validation-errors/fe-attempt-3.md
+Error log: $OUTPUT_DIR/../../validation-errors/fe-attempt-3.md
 Action: run /team-fe --project {slug} to retry manually
 ```
 
@@ -238,8 +240,8 @@ Action: run /team-fe --project {slug} to retry manually
 
 Output:
 ```
-[FE Dev] ✓ Written: projects/{slug}/team/fe/{each source file}
-[FE Dev] ✓ Written: projects/{slug}/team/fe/pr-description.md
+[FE Dev] ✓ Written: $OUTPUT_DIR/{each source file}
+[FE Dev] ✓ Written: $OUTPUT_DIR/pr-description.md
 [FE Dev] ✓ Validation passed (attempt {n})
 
 FE Dev phase complete.

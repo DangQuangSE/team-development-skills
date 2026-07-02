@@ -25,64 +25,68 @@ Be rigorous and specific. Vague findings are useless. Every finding must identif
 ## Step 0 — Parse Parameters
 
 - **`--project {slug}`** — project identifier. If not provided, use CWD name. Confirm: `"Using project slug: {slug}. Continue? (y/n)"`
-- **`--level {level}`** — project depth level (fresh | junior | mid | senior). Passed from orchestrator. Used as fallback if config is unreadable.
+- **`--level {level}`** — project depth level (fresh | junior | mid | senior). Falls back to asking user if not provided and config file missing.
 - **`--context "{text or path}"`** — extra context. If starts with `./` or `/`, read as file. Otherwise inline text. Prepend to analysis; do NOT write to artifacts.
+- **`--input-dir <path>`** — custom directory for input artifacts (default: `projects/{slug}/team/`).
+- **`--output-dir <path>`** — custom directory for output artifacts (default: `projects/{slug}/team/qa/`).
+
+Set `$INPUT_DIR` and `$OUTPUT_DIR` from these flags.
 
 ---
 
-## Step 1 — Load ALL Pipeline Artifacts
+## Step 1 — Load Available Pipeline Artifacts
 
-Use the Read tool to read EVERY artifact from EVERY preceding phase:
+Use the Read tool to read artifacts from `$INPUT_DIR`. Read each if it exists; warn if missing:
 
-**BA phase:**
-1. `projects/{slug}/team/ba/requirements.md`
-2. `projects/{slug}/team/ba/user-stories.md`
-3. `projects/{slug}/team/ba/acceptance-criteria.md`
-4. `projects/{slug}/team/ba/business-rules.md`
+**BA phase:** `$INPUT_DIR/ba/`:
+1. `$INPUT_DIR/ba/requirements.md`
+2. `$INPUT_DIR/ba/user-stories.md`
+3. `$INPUT_DIR/ba/acceptance-criteria.md`
+4. `$INPUT_DIR/ba/business-rules.md`
 
-**TechLead phase:**
-5. `projects/{slug}/team/techlead/architecture.md`
-6. `projects/{slug}/team/techlead/tech-stack.md`
-7. `projects/{slug}/team/techlead/ERD.md`
-8. `projects/{slug}/team/techlead/sequence-diagrams.md`
-9. Use Glob: `projects/{slug}/team/techlead/ADR-*.md` → read all ADRs found
+**TechLead phase:** `$INPUT_DIR/techlead/`:
+5. `$INPUT_DIR/techlead/architecture.md`
+6. `$INPUT_DIR/techlead/tech-stack.md`
+7. `$INPUT_DIR/techlead/ERD.md`
+8. `$INPUT_DIR/techlead/sequence-diagrams.md`
+9. Glob: `$INPUT_DIR/techlead/ADR-*.md`
 
-**PM phase:**
-10. `projects/{slug}/team/pm/sprint-plan.md`
-11. `projects/{slug}/team/pm/task-breakdown.md`
-12. `projects/{slug}/team/pm/story-points.md`
+**PM phase:** `$INPUT_DIR/pm/`:
+10. `$INPUT_DIR/pm/sprint-plan.md`
+11. `$INPUT_DIR/pm/task-breakdown.md`
+12. `$INPUT_DIR/pm/story-points.md`
 
-**BE Dev phase:**
-13. Use Glob: `projects/{slug}/team/be/**/*` → read all source files
-14. `projects/{slug}/team/be/.env.example`
-15. `projects/{slug}/team/be/pr-description.md`
+**BE Dev phase:** `$INPUT_DIR/be/`:
+13. Glob: `$INPUT_DIR/be/**/*`
+14. `$INPUT_DIR/be/.env.example`
+15. `$INPUT_DIR/be/pr-description.md`
 
-**FE Dev phase:**
-16. Use Glob: `projects/{slug}/team/fe/**/*` → read all source files
-17. `projects/{slug}/team/fe/pr-description.md`
+**FE Dev phase:** `$INPUT_DIR/fe/`:
+16. Glob: `$INPUT_DIR/fe/**/*`
+17. `$INPUT_DIR/fe/pr-description.md`
 
-**Tester phase:**
-18. `projects/{slug}/team/tester/test-plan.md`
-19. `projects/{slug}/team/tester/test-cases-unit.md`
-20. `projects/{slug}/team/tester/test-cases-integration.md`
-21. `projects/{slug}/team/tester/test-cases-e2e.md`
-22. `projects/{slug}/team/tester/bug-report-template.md`
+**Tester phase:** `$INPUT_DIR/tester/`:
+18. `$INPUT_DIR/tester/test-plan.md`
+19. `$INPUT_DIR/tester/test-cases-unit.md`
+20. `$INPUT_DIR/tester/test-cases-integration.md`
+21. `$INPUT_DIR/tester/test-cases-e2e.md`
+22. `$INPUT_DIR/tester/bug-report-template.md`
 
 **Flags from previous agents (if any):**
-23. `projects/{slug}/flags-summary.md` (if exists — read if present)
-24. Use Glob: `projects/{slug}/validation-errors/*.md` → read any validation error logs
+23. `$INPUT_DIR/../flags-summary.md` (if exists — read if present)
+24. Glob: `$INPUT_DIR/../validation-errors/*.md`
+
+If most artifacts missing → `[QA/QC] Few artifacts found. Review scope limited to available files.` Proceed with what exists.
 
 ---
 
 ## Step 1.5 — Level Calibration
 
-Use the Read tool: `projects/{slug}/team/.project-config.md`
+Use the Read tool: `$INPUT_DIR/.project-config.md`
 
 - **If exists:** extract `**level:**` from `## Project`. This is the authoritative level.
-- **If missing:** use `--level` arg from Step 0. If also missing → output error and STOP:
-  ```
-  [QA/QC] ✗ No project configuration found. Run /team-ba first to initialize level config.
-  ```
+- **If missing:** use `--level` arg from Step 0.
+- **If also missing:** `[QA/QC] No level configured. Choose: fresh | junior | mid | senior` — ask user and wait for reply.
 
 **Active compliance standard for this project:**
 
@@ -162,7 +166,7 @@ Check for contradictions or gaps between artifacts:
 
 Write all 3 files completely. No placeholders.
 
-### File 1 — `projects/{slug}/team/qa/quality-report.md`
+### File 1 — `$OUTPUT_DIR/quality-report.md`
 
 ```markdown
 # Quality Report — {Project Name}
@@ -224,7 +228,7 @@ Write all 3 files completely. No placeholders.
 **Recommended verdict:** APPROVED | CONDITIONAL | REJECTED
 ```
 
-### File 2 — `projects/{slug}/team/qa/compliance-check.md`
+### File 2 — `$OUTPUT_DIR/compliance-check.md`
 
 ```markdown
 # Compliance Check — {Project Name}
@@ -261,7 +265,7 @@ Write all 3 files completely. No placeholders.
 **Overall compliance:** PASS | CONDITIONAL | FAIL
 ```
 
-### File 3 — `projects/{slug}/team/qa/sign-off.md`
+### File 3 — `$OUTPUT_DIR/sign-off.md`
 
 ```markdown
 # Release Sign-off — {Project Name}
@@ -320,7 +324,7 @@ Proceed to Step 5.
 - **Attempt 1 or 2:** `[QA/QC] Retrying (attempt {n+1}/3)...` Rewrite failing files. Validate again.
 - **Attempt 3:** HARD STOP. Write:
 
-`projects/{slug}/validation-errors/qa-attempt-3.md`:
+`$OUTPUT_DIR/../../validation-errors/qa-attempt-3.md`:
 ```markdown
 # Validation Error Log — QA/QC Agent
 timestamp: {ISO 8601 UTC}
@@ -335,7 +339,7 @@ recovery: Run /team-qa --project {slug} to retry
 Output and stop:
 ```
 [QA/QC] ✗ Validation failed on attempt 3/3 — HARD STOP
-Error log: projects/{slug}/validation-errors/qa-attempt-3.md
+Error log: $OUTPUT_DIR/../../validation-errors/qa-attempt-3.md
 Action: run /team-qa --project {slug} to retry manually
 ```
 
@@ -345,9 +349,9 @@ Action: run /team-qa --project {slug} to retry manually
 
 Output:
 ```
-[QA/QC] ✓ Written: projects/{slug}/team/qa/quality-report.md
-[QA/QC] ✓ Written: projects/{slug}/team/qa/compliance-check.md
-[QA/QC] ✓ Written: projects/{slug}/team/qa/sign-off.md
+[QA/QC] ✓ Written: $OUTPUT_DIR/quality-report.md
+[QA/QC] ✓ Written: $OUTPUT_DIR/compliance-check.md
+[QA/QC] ✓ Written: $OUTPUT_DIR/sign-off.md
 [QA/QC] ✓ Validation passed (attempt {n})
 [Gate 3] {✓ APPROVED | ⚠️ CONDITIONAL | ✗ REJECTED}
 

@@ -174,11 +174,14 @@ grep "python hooks/" virtual-team-skill/settings.json    # should match
 <!-- Updated by cook automatically -- do not edit manually -->
 
 **Last active:** 2026-07-02
-**Phase in progress:** Verification complete
-**Status:** All 4 phases complete. All verifications PASS.
+**Phase in progress:** Flexibility refactor complete
+**Status:** All skills updated with --input-dir, --output-dir, graceful fallback, orchestrator resilience.
 
 ### Decisions made this session
-- (none)
+- HARD STOP in Layer 1 validation (attempt 3/3) kept — internal retry gate, not pipeline killer
+- team-list left as-is (read-only utility)
+- $INPUT_DIR / $OUTPUT_DIR convention used across all skills for consistency
+- --skip-{phase} flags added to orchestrator for non-linear pipeline execution
 
 ### Next immediate action
 None — feature complete. Ready for Phase 2 (install script, root .claude sync).

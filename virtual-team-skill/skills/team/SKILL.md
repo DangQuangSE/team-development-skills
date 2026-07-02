@@ -25,15 +25,15 @@ Your role: invoke each role skill in sequence using the Skill tool. You do NOT g
 Parse from the command:
 
 - **`"{requirement text}"`** — the operator's requirement. Required unless `--spec` is provided.
-- **`--project {slug}`** — project identifier. If not provided, use the current working directory name. Confirm: `"Using project slug: {slug}. Continue? (y/n)"` and wait for operator reply.
-- **`--level {level}`** — **REQUIRED.** Project depth level. Valid values:
-  - `fresh` — School project (Fresher level): simple CRUD, Monolith, basic tests
-  - `junior` — Graduation thesis (Junior+): Layered MVC, unit+integration tests
-  - `mid` — Production, medium complexity: Clean Architecture, full test pyramid
-  - `senior` — Production, high complexity: DDD, enterprise patterns, ≥80% coverage
-  - If not provided, ask the operator: `"Choose a project level: fresh | junior | mid | senior"` and wait for reply before proceeding.
-- **`--context "{text or path}"`** — extra context to forward to the BA agent. If starts with `./` or `/`, read as file. Otherwise inline text.
+- **`--project {slug}`** — project identifier. If not provided, use CWD name. Confirm: `"Using project slug: {slug}. Continue? (y/n)"` and wait for reply.
+- **`--level {level}`** — Project depth level. Valid: `fresh` | `junior` | `mid` | `senior`. If not provided, ask: `"Choose a project level: fresh | junior | mid | senior"` and wait.
+- **`--context "{text or path}"`** — extra context forwarded to agents. If starts with `./` or `/`, read as file. Otherwise inline text.
 - **`--spec <path>`** — forward to BA agent: read the markdown file at `{path}` as primary input. Works with any markdown format.
+- **`--input-dir <path>`** — custom input directory (default: `projects/{slug}/team/`). Lets you reuse existing artifacts.
+- **`--output-dir <path>`** — custom output directory (default: `projects/{slug}/team/`).
+- **`--skip-{phase}`** — skip a pipeline phase (e.g., `--skip-ba`, `--skip-techlead`, `--skip-pm`, `--skip-dev`, `--skip-fe`, `--skip-test`). Use when resuming from a specific point or to run a subset of agents.
+
+Set `$INPUT_DIR` and `$OUTPUT_DIR` from flags. Pass these to each agent skill call.
 
 ---
 
@@ -84,16 +84,18 @@ Check for existing QA sign-off from a prior run:
 
 ## Step 2 — BA Phase
 
-Use the Skill tool:
+If `--skip-ba` is set → skip this phase. Output: `[Skip] BA phase skipped by operator.`
+
+Otherwise, use the Skill tool:
 
 ```
 skill: team-ba
-args: "{requirement text}" --project {slug} --level {level} {--spec <path> if flag present} {--context "..." if provided}
+args: "{requirement text}" --project {slug} --level {level} {--spec <path> if flag present} {--context "..." if provided} --input-dir $INPUT_DIR --output-dir $OUTPUT_DIR/ba
 ```
 
 **After the skill completes**, check its output:
 
-- Contains `HARD STOP` → output the error and STOP the entire pipeline.
+- Contains `HARD STOP` → output: `[Phase Fail] BA failed. Options: (a) fix and retry /team-ba, (b) skip with --skip-ba, (c) stop.` Ask user. If (b) → proceed. If (c) → STOP.
 - Contains `[BA] ✓ Validation passed` → proceed.
 
 Output: `[Gate Check] BA artifacts ready — starting TechLead phase...`
@@ -102,16 +104,18 @@ Output: `[Gate Check] BA artifacts ready — starting TechLead phase...`
 
 ## Step 3 — TechLead Phase
 
-Use the Skill tool:
+If `--skip-techlead` → `[Skip] TechLead phase skipped by operator.` Proceed.
+
+Otherwise:
 
 ```
 skill: team-techlead
-args: --project {slug} --level {level}
+args: --project {slug} --level {level} --input-dir $INPUT_DIR --output-dir $OUTPUT_DIR/techlead
 ```
 
 Check output:
 
-- `HARD STOP` → output error and STOP.
+- `HARD STOP` → `[Phase Fail] TechLead failed. Continue? (y/n)` Ask user. If yes → proceed. If no → STOP.
 - `[Gate 1] ✓ Design Freeze declared` → proceed.
 
 Output: `[Gate 1] ✓ Design Freeze — starting PM phase...`
@@ -120,16 +124,18 @@ Output: `[Gate 1] ✓ Design Freeze — starting PM phase...`
 
 ## Step 4 — PM Phase
 
-Use the Skill tool:
+If `--skip-pm` → `[Skip] PM phase skipped.` Proceed.
+
+Otherwise:
 
 ```
 skill: team-pm
-args: --project {slug} --level {level}
+args: --project {slug} --level {level} --input-dir $INPUT_DIR --output-dir $OUTPUT_DIR/pm
 ```
 
 Check output:
 
-- `HARD STOP` → STOP.
+- `HARD STOP` → `[Phase Fail] PM failed. Continue? (y/n)` If yes → proceed. If no → STOP.
 - Otherwise proceed.
 
 Output: `[PM] ✓ Sprint plan ready — loading task registry...`
@@ -156,21 +162,21 @@ Output: `[PM] ✓ Task registry loaded: {n} BE Dev, {n} FE Dev, {n} Tester, {n} 
 
 ## Step 5 — BE Dev Phase
 
-**Before invoking:** Call TodoWrite with the full task list:
+If `--skip-dev` → `[Skip] BE Dev phase skipped.` Proceed.
+
+Otherwise, **Before invoking:** Call TodoWrite:
 - All **BE_TASKS** → `status: "in_progress"`
 - All other tasks → `status: "pending"`
 
-Use the Skill tool:
-
 ```
 skill: team-dev
-args: --project {slug} --level {level}
+args: --project {slug} --level {level} --input-dir $INPUT_DIR --output-dir $OUTPUT_DIR/be
 ```
 
 Check output:
 
-- `HARD STOP` → STOP.
-- Otherwise: **After invoking**, call TodoWrite with the full task list:
+- `HARD STOP` → `[Phase Fail] BE Dev failed. Continue? (y/n)` If yes → proceed. If no → STOP.
+- Otherwise: **After invoking**, call TodoWrite:
   - All **BE_TASKS** → `status: "completed"`
   - All other tasks remain `status: "pending"`
 
@@ -180,22 +186,22 @@ Output: `[BE Dev] ✓ Backend artifacts ready — starting FE Dev phase...`
 
 ## Step 6 — FE Dev Phase
 
-**Before invoking:** Call TodoWrite with the full task list:
-- All **BE_TASKS** → `status: "completed"` (already done)
+If `--skip-fe` → `[Skip] FE Dev phase skipped.` Proceed.
+
+Otherwise, **Before invoking:** Call TodoWrite:
+- All **BE_TASKS** → `status: "completed"`
 - All **FE_TASKS** → `status: "in_progress"`
 - All other tasks → `status: "pending"`
 
-Use the Skill tool:
-
 ```
 skill: team-fe
-args: --project {slug} --level {level}
+args: --project {slug} --level {level} --input-dir $INPUT_DIR --output-dir $OUTPUT_DIR/fe
 ```
 
 Check output:
 
-- `HARD STOP` → STOP.
-- Otherwise: **After invoking**, call TodoWrite with the full task list:
+- `HARD STOP` → `[Phase Fail] FE Dev failed. Continue? (y/n)` If yes → proceed. If no → STOP.
+- Otherwise: **After invoking**, call TodoWrite:
   - All **BE_TASKS** → `status: "completed"`
   - All **FE_TASKS** → `status: "completed"`
   - All other tasks remain `status: "pending"`
@@ -206,23 +212,23 @@ Output: `[FE Dev] ✓ Frontend artifacts ready — starting Tester phase...`
 
 ## Step 7 — Tester Phase
 
-**Before invoking:** Call TodoWrite with the full task list:
+If `--skip-test` → `[Skip] Tester phase skipped.` Proceed.
+
+Otherwise, **Before invoking:** Call TodoWrite:
 - All **BE_TASKS** → `status: "completed"`
 - All **FE_TASKS** → `status: "completed"`
 - All **TESTER_TASKS** → `status: "in_progress"`
 - All **OTHER_TASKS** → `status: "pending"`
 
-Use the Skill tool:
-
 ```
 skill: team-test
-args: --project {slug} --level {level}
+args: --project {slug} --level {level} --input-dir $INPUT_DIR --output-dir $OUTPUT_DIR/tester
 ```
 
 Check output:
 
-- `HARD STOP` → STOP.
-- Otherwise: **After invoking**, call TodoWrite with the full task list — all tasks → `status: "completed"`.
+- `HARD STOP` → `[Phase Fail] Tester failed. Continue? (y/n)` If yes → proceed. If no → STOP.
+- Otherwise: **After invoking**, call TodoWrite — all tasks → `status: "completed"`.
 - Note Gate 2 status from output.
 
 Output: `[Gate 2] {status} — starting QA/QC phase...`
@@ -231,16 +237,18 @@ Output: `[Gate 2] {status} — starting QA/QC phase...`
 
 ## Step 8 — QA/QC Phase
 
-Use the Skill tool:
+If `--skip-qa` → `[Skip] QA/QC phase skipped.` Proceed.
+
+Otherwise:
 
 ```
 skill: team-qa
-args: --project {slug} --level {level}
+args: --project {slug} --level {level} --input-dir $INPUT_DIR --output-dir $OUTPUT_DIR/qa
 ```
 
 Check output:
 
-- `HARD STOP` → STOP.
+- `HARD STOP` → `[Phase Fail] QA/QC failed. Continue? (y/n)` If yes → proceed. If no → STOP.
 - Note Gate 3 verdict.
 
 ---

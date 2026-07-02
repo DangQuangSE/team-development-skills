@@ -22,42 +22,44 @@ Your responsibilities: implement the backend system based on the TechLead's arch
 ## Step 0 — Parse Parameters
 
 - **`--project {slug}`** — project identifier. If not provided, use CWD name. Confirm: `"Using project slug: {slug}. Continue? (y/n)"`
-- **`--level {level}`** — project depth level (fresh | junior | mid | senior). Passed from orchestrator. Used as fallback if config is unreadable.
+- **`--level {level}`** — project depth level (fresh | junior | mid | senior). Falls back to asking user if not provided and config file missing.
 - **`--context "{text or path}"`** — extra context. If starts with `./` or `/`, read as file. Otherwise inline text. Prepend to work; do NOT write to artifacts.
+- **`--input-dir <path>`** — custom directory for input artifacts (default: `projects/{slug}/team/`).
+- **`--output-dir <path>`** — custom directory for output artifacts (default: `projects/{slug}/team/be/`).
+
+Set `$INPUT_DIR` and `$OUTPUT_DIR` from these flags.
 
 ---
 
 ## Step 1 — Load Context Chain
 
-Use the Read tool to read ALL relevant artifacts:
+Use the Read tool to read available artifacts from `$INPUT_DIR`:
 
-**BA artifacts:**
-1. `projects/{slug}/team/ba/requirements.md`
-2. `projects/{slug}/team/ba/user-stories.md`
-3. `projects/{slug}/team/ba/acceptance-criteria.md`
-4. `projects/{slug}/team/ba/business-rules.md`
+**BA artifacts:** read from `$INPUT_DIR/ba/`:
+1. `$INPUT_DIR/ba/requirements.md`
+2. `$INPUT_DIR/ba/user-stories.md`
+3. `$INPUT_DIR/ba/acceptance-criteria.md`
+4. `$INPUT_DIR/ba/business-rules.md`
 
-**TechLead artifacts (critical — defines your tech stack):**
-5. `projects/{slug}/team/techlead/tech-stack.md` — YOUR PRIMARY REFERENCE for languages, frameworks, libraries
-6. `projects/{slug}/team/techlead/architecture.md`
-7. `projects/{slug}/team/techlead/ERD.md` — defines your data model
+**TechLead artifacts:** read from `$INPUT_DIR/techlead/`:
+5. `$INPUT_DIR/techlead/tech-stack.md` — your primary reference for tech choices
+6. `$INPUT_DIR/techlead/architecture.md`
+7. `$INPUT_DIR/techlead/ERD.md`
 
-**PM artifacts:**
-8. `projects/{slug}/team/pm/task-breakdown.md` — shows which backend tasks you must implement
+**PM artifacts:** read from `$INPUT_DIR/pm/`:
+8. `$INPUT_DIR/pm/task-breakdown.md`
 
-If `tech-stack.md` or `ERD.md` is missing → output error and STOP.
+For each file: read if exists. If `tech-stack.md` or `ERD.md` missing → `[WARN] Critical artifact missing: {filename}. Provide tech stack info via --context, or use --input-dir to point to artifacts.` Ask user: "Describe your tech stack in --context, or run /team-techlead first."
 
 ---
 
 ## Step 1.5 — Level Calibration
 
-Use the Read tool: `projects/{slug}/team/.project-config.md`
+Use the Read tool: `$INPUT_DIR/.project-config.md`
 
 - **If exists:** extract `**level:**` from `## Project`. This is the authoritative level.
-- **If missing:** use `--level` arg from Step 0. If also missing → output error and STOP:
-  ```
-  [BE Dev] ✗ No project configuration found. Run /team-ba first to initialize level config.
-  ```
+- **If missing:** use `--level` arg from Step 0.
+- **If also missing:** `[BE Dev] No level configured. Choose: fresh | junior | mid | senior` — ask user and wait for reply.
 
 **Active level profile for backend code generation:**
 
@@ -115,7 +117,7 @@ Plan your file structure based on the tech stack convention:
 
 ## Step 4 — Write Backend Source Files
 
-Write actual implementation files to `projects/{slug}/team/be/`.
+Write actual implementation files to `$OUTPUT_DIR`.
 
 **SECURITY RULES — MANDATORY — NO EXCEPTIONS:**
 - Do NOT hardcode any credentials, passwords, API keys, tokens, or connection strings
@@ -144,7 +146,7 @@ For each API route implement the full CRUD operations required by the user stori
 
 ## Step 5 — Write `.env.example`
 
-Write `projects/{slug}/team/be/.env.example`:
+Write `$OUTPUT_DIR/.env.example`:
 
 ```
 # {Project Name} — Backend Environment Variables
@@ -178,7 +180,7 @@ Include ALL environment variables referenced anywhere in the source code. Use de
 
 ## Step 6 — Write `pr-description.md`
 
-Write `projects/{slug}/team/be/pr-description.md`:
+Write `$OUTPUT_DIR/pr-description.md`:
 
 ```markdown
 # PR: Backend Implementation — {Project Name}
@@ -220,8 +222,8 @@ Write `projects/{slug}/team/be/pr-description.md`:
 ## Step 7 — Layer 1 Validation
 
 After writing all files, use the Read tool to re-read:
-1. `projects/{slug}/team/be/pr-description.md` — check for: `## Summary` · `## Changes` · `## Testing Notes`
-2. `projects/{slug}/team/be/.env.example` — check file is non-empty
+1. `$OUTPUT_DIR/pr-description.md` — check for: `## Summary` · `## Changes` · `## Testing Notes`
+2. `$OUTPUT_DIR/.env.example` — check file is non-empty
 
 Also verify security: scan each generated source file mentally — confirm ZERO literal credentials, passwords, tokens, or connection strings exist. If found: rewrite those files with env var references before proceeding.
 
@@ -244,7 +246,7 @@ Proceed to Step 7.
 - **Attempt 1 or 2:** `[BE Dev] Retrying (attempt {n+1}/3)...` Fix the failing files. Validate again.
 - **Attempt 3:** HARD STOP. Write:
 
-`projects/{slug}/validation-errors/be-attempt-3.md`:
+`$OUTPUT_DIR/../../validation-errors/be-attempt-3.md`:
 ```markdown
 # Validation Error Log — BE Dev Agent
 timestamp: {ISO 8601 UTC}
@@ -259,7 +261,7 @@ recovery: Run /team-dev --project {slug} to retry
 Output and stop:
 ```
 [BE Dev] ✗ Validation failed on attempt 3/3 — HARD STOP
-Error log: projects/{slug}/validation-errors/be-attempt-3.md
+Error log: $OUTPUT_DIR/../../validation-errors/be-attempt-3.md
 Action: run /team-dev --project {slug} to retry manually
 ```
 
@@ -269,10 +271,10 @@ Action: run /team-dev --project {slug} to retry manually
 
 Output:
 ```
-[BE Dev] ✓ Written: projects/{slug}/team/be/{entry-point}
-[BE Dev] ✓ Written: projects/{slug}/team/be/{each source file}
-[BE Dev] ✓ Written: projects/{slug}/team/be/.env.example
-[BE Dev] ✓ Written: projects/{slug}/team/be/pr-description.md
+[BE Dev] ✓ Written: $OUTPUT_DIR/{entry-point}
+[BE Dev] ✓ Written: $OUTPUT_DIR/{each source file}
+[BE Dev] ✓ Written: $OUTPUT_DIR/.env.example
+[BE Dev] ✓ Written: $OUTPUT_DIR/pr-description.md
 [BE Dev] ✓ Validation passed (attempt {n})
 
 BE Dev phase complete.

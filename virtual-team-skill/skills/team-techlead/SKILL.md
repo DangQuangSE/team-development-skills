@@ -21,33 +21,43 @@ Your responsibilities: design the system architecture, select the technology sta
 
 ## Step 0 — Parse Parameters
 
-- **`--project {slug}`** — project identifier. If not provided, use the CWD name. Confirm with operator: `"Using project slug: {slug}. Continue? (y/n)"`
-- **`--level {level}`** — project depth level (fresh | junior | mid | senior). Passed from orchestrator. Used as fallback if config is unreadable.
-- **`--context "{text or path}"`** — extra context. If starts with `./` or `/`, read as file. Otherwise treat as inline text. Prepend to analysis; do NOT write to artifacts.
+- **`--project {slug}`** — project identifier. If not provided, use the CWD name. Confirm: `"Using project slug: {slug}. Continue? (y/n)"`
+- **`--level {level}`** — project depth level (fresh | junior | mid | senior). Passed from orchestrator. Falls back to asking user if not provided and config file missing.
+- **`--context "{text or path}"`** — extra context. If starts with `./` or `/`, read as file. Otherwise inline text. Prepend to analysis; do NOT write to artifacts.
+- **`--input-dir <path>`** — custom directory for input artifacts (default: `projects/{slug}/team/`). Lets you point to artifacts from a different project or location.
+- **`--output-dir <path>`** — custom directory for output artifacts (default: `projects/{slug}/team/techlead/`). Lets you write to a custom location.
+
+After parsing: set `$INPUT_DIR = {input-dir value}` and `$OUTPUT_DIR = {output-dir value}`. All artifact paths below use these variables.
 
 ---
 
 ## Step 1 — Load BA Artifacts (Context Chain)
 
-Use the Read tool to read ALL BA artifacts:
-1. `projects/{slug}/team/ba/requirements.md`
-2. `projects/{slug}/team/ba/user-stories.md`
-3. `projects/{slug}/team/ba/acceptance-criteria.md`
-4. `projects/{slug}/team/ba/business-rules.md`
+Use the Read tool to read ALL BA artifacts from `$INPUT_DIR`:
+1. `$INPUT_DIR/ba/requirements.md`
+2. `$INPUT_DIR/ba/user-stories.md`
+3. `$INPUT_DIR/ba/acceptance-criteria.md`
+4. `$INPUT_DIR/ba/business-rules.md`
 
-If ANY file is missing → output: `"Error: BA artifacts missing at projects/{slug}/team/ba/. Run /team-ba --project {slug} first."` STOP.
+For each file: read it if it exists. If missing → `[WARN] BA artifact not found: {filename}`.
+If ALL 4 files are missing:
+```
+[TechLead] No BA artifacts found in $INPUT_DIR/ba/. Options:
+  (a) Run /team-ba first
+  (b) Provide requirements via --context (you describe the system)
+  (c) Use --input-dir to point to existing artifacts
+```
+Ask user which option. If (b), proceed with info from `--context`. If none, ask: "Provide requirements text, or point to a directory with --input-dir".
 
 ---
 
 ## Step 1.5 — Level Calibration
 
-Use the Read tool: `projects/{slug}/team/.project-config.md`
+Use the Read tool: `$INPUT_DIR/.project-config.md`
 
 - **If exists:** extract `**level:**` from `## Project`. This is the authoritative level.
-- **If missing:** use `--level` arg from Step 0. If also missing → output error and STOP:
-  ```
-  [TechLead] ✗ No project configuration found. Run /team-ba first to initialize level config.
-  ```
+- **If missing:** use `--level` arg from Step 0.
+- **If also missing:** `[TechLead] No level configured. Choose: fresh | junior | mid | senior` — ask user and wait for reply.
 
 **TechLead quality is ALWAYS senior — level only determines recommended architecture style.**
 
@@ -109,9 +119,9 @@ Before writing files, synthesize the BA artifacts:
 
 ## Step 4 — Write Artifact Files
 
-Write all files completely. No placeholders. Write each file in full before starting the next.
+Write all files completely to `$OUTPUT_DIR`. No placeholders. Write each file in full before starting the next.
 
-### File 1 — `projects/{slug}/team/techlead/architecture.md`
+### File 1 — `$OUTPUT_DIR/architecture.md`
 
 ```markdown
 # System Architecture — {Project Name}
@@ -167,7 +177,7 @@ graph LR
 {Or write: "No flags detected." if no issues found.}
 ```
 
-### File 2 — `projects/{slug}/team/techlead/tech-stack.md`
+### File 2 — `$OUTPUT_DIR/tech-stack.md`
 
 ```markdown
 # Technology Stack — {Project Name}
@@ -210,7 +220,7 @@ graph LR
 {At least 2 rejected alternatives per major layer where a choice was made.}
 ```
 
-### File 3 — `projects/{slug}/team/techlead/ERD.md`
+### File 3 — `$OUTPUT_DIR/ERD.md`
 
 ```markdown
 # Entity Relationship Diagram — {Project Name}
@@ -249,7 +259,7 @@ erDiagram
 
 Derive entities from the BA requirements and user stories. Every entity in the ERD must have a description entry. Use proper ERD notation: PK, FK, UK markers.
 
-### File 4 — `projects/{slug}/team/techlead/sequence-diagrams.md`
+### File 4 — `$OUTPUT_DIR/sequence-diagrams.md`
 
 ```markdown
 # Sequence Diagrams — {Project Name}
@@ -279,7 +289,7 @@ sequenceDiagram
 
 Include: the primary happy-path for each main feature cluster, at least one error path, and any critical integrations.
 
-### File 5+ — `projects/{slug}/team/techlead/ADR-{NNN}.md`
+### File 5+ — `$OUTPUT_DIR/ADR-{NNN}.md`
 
 Create one ADR file per major architectural decision. Minimum 1 ADR (for the overall architecture choice). Typical: 2–5 ADRs.
 
@@ -337,7 +347,7 @@ Proceed to Step 5.
 - **Attempt 1 or 2:** `[TechLead] Retrying (attempt {n+1}/3)...` Rewrite only the failing files. Validate again.
 - **Attempt 3:** HARD STOP. Write:
 
-`projects/{slug}/validation-errors/techlead-attempt-3.md`:
+`$OUTPUT_DIR/../../validation-errors/techlead-attempt-3.md`:
 ```markdown
 # Validation Error Log — TechLead Agent
 timestamp: {ISO 8601 UTC}
@@ -352,7 +362,7 @@ recovery: Run /team-techlead --project {slug} to retry
 Output and stop:
 ```
 [TechLead] ✗ Validation failed on attempt 3/3 — HARD STOP
-Error log: projects/{slug}/validation-errors/techlead-attempt-3.md
+Error log: $OUTPUT_DIR/../../validation-errors/techlead-attempt-3.md
 Action: run /team-techlead --project {slug} to retry manually
 ```
 
@@ -362,11 +372,11 @@ Action: run /team-techlead --project {slug} to retry manually
 
 Output:
 ```
-[TechLead] ✓ Written: projects/{slug}/team/techlead/architecture.md
-[TechLead] ✓ Written: projects/{slug}/team/techlead/tech-stack.md
-[TechLead] ✓ Written: projects/{slug}/team/techlead/ERD.md
-[TechLead] ✓ Written: projects/{slug}/team/techlead/sequence-diagrams.md
-[TechLead] ✓ Written: projects/{slug}/team/techlead/ADR-001.md [... ADR-{n}.md]
+[TechLead] ✓ Written: $OUTPUT_DIR/architecture.md
+[TechLead] ✓ Written: $OUTPUT_DIR/tech-stack.md
+[TechLead] ✓ Written: $OUTPUT_DIR/ERD.md
+[TechLead] ✓ Written: $OUTPUT_DIR/sequence-diagrams.md
+[TechLead] ✓ Written: $OUTPUT_DIR/ADR-001.md [... ADR-{n}.md]
 [TechLead] ✓ Validation passed (attempt {n})
 [Gate 1] ✓ Design Freeze declared
 

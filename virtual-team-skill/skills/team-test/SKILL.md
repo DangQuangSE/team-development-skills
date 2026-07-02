@@ -22,46 +22,50 @@ Your responsibilities: derive a comprehensive test plan from the user stories an
 ## Step 0 — Parse Parameters
 
 - **`--project {slug}`** — project identifier. If not provided, use CWD name. Confirm: `"Using project slug: {slug}. Continue? (y/n)"`
-- **`--level {level}`** — project depth level (fresh | junior | mid | senior). Passed from orchestrator. Used as fallback if config is unreadable.
+- **`--level {level}`** — project depth level (fresh | junior | mid | senior). Falls back to asking user if not provided and config file missing.
 - **`--context "{text or path}"`** — extra context. If starts with `./` or `/`, read as file. Otherwise inline text. Prepend to analysis; do NOT write to artifacts.
+- **`--input-dir <path>`** — custom directory for input artifacts (default: `projects/{slug}/team/`).
+- **`--output-dir <path>`** — custom directory for output artifacts (default: `projects/{slug}/team/tester/`).
+
+Set `$INPUT_DIR` and `$OUTPUT_DIR` from these flags.
 
 ---
 
 ## Step 1 — Load Full Context Chain
 
-Use the Read tool to read ALL preceding artifacts:
+Use the Read tool to read available artifacts from `$INPUT_DIR`:
 
-**BA:**
-1. `projects/{slug}/team/ba/requirements.md`
-2. `projects/{slug}/team/ba/user-stories.md`
-3. `projects/{slug}/team/ba/acceptance-criteria.md`
-4. `projects/{slug}/team/ba/business-rules.md`
+**BA:** `$INPUT_DIR/ba/` — read each available:
+1. `$INPUT_DIR/ba/requirements.md`
+2. `$INPUT_DIR/ba/user-stories.md`
+3. `$INPUT_DIR/ba/acceptance-criteria.md`
+4. `$INPUT_DIR/ba/business-rules.md`
 
-**TechLead:**
-5. `projects/{slug}/team/techlead/architecture.md`
-6. `projects/{slug}/team/techlead/tech-stack.md`
-7. `projects/{slug}/team/techlead/ERD.md`
+**TechLead:** `$INPUT_DIR/techlead/` — read each available:
+5. `$INPUT_DIR/techlead/architecture.md`
+6. `$INPUT_DIR/techlead/tech-stack.md`
+7. `$INPUT_DIR/techlead/ERD.md`
 
-**PM:**
-8. `projects/{slug}/team/pm/task-breakdown.md`
+**PM:** `$INPUT_DIR/pm/`:
+8. `$INPUT_DIR/pm/task-breakdown.md`
 
-**BE Dev:**
-9. `projects/{slug}/team/be/pr-description.md`
+**BE Dev:** `$INPUT_DIR/be/`:
+9. `$INPUT_DIR/be/pr-description.md`
 
-**FE Dev:**
-10. `projects/{slug}/team/fe/pr-description.md`
+**FE Dev:** `$INPUT_DIR/fe/`:
+10. `$INPUT_DIR/fe/pr-description.md`
+
+If a file is missing → `[WARN] {filename} not found.` Proceed with available artifacts. If ALL missing, ask user: "No artifacts found. Provide testing requirements via --context, or use --input-dir."
 
 ---
 
 ## Step 1.5 — Level Calibration
 
-Use the Read tool: `projects/{slug}/team/.project-config.md`
+Use the Read tool: `$INPUT_DIR/.project-config.md`
 
 - **If exists:** extract `**level:**` from `## Project`. This is the authoritative level.
-- **If missing:** use `--level` arg from Step 0. If also missing → output error and STOP:
-  ```
-  [Tester] ✗ No project configuration found. Run /team-ba first to initialize level config.
-  ```
+- **If missing:** use `--level` arg from Step 0.
+- **If also missing:** `[Tester] No level configured. Choose: fresh | junior | mid | senior` — ask user and wait for reply.
 
 **Active level profile for test generation:**
 
@@ -116,7 +120,7 @@ Before writing files:
 
 Write all 5 files completely. No placeholders. Write each in full before starting the next.
 
-### File 1 — `projects/{slug}/team/tester/test-plan.md`
+### File 1 — `$OUTPUT_DIR/test-plan.md`
 
 ```markdown
 # Test Plan — {Project Name}
@@ -182,7 +186,7 @@ Write all 5 files completely. No placeholders. Write each in full before startin
 {Or: "No flags detected."}
 ```
 
-### File 2 — `projects/{slug}/team/tester/test-cases-unit.md`
+### File 2 — `$OUTPUT_DIR/test-cases-unit.md`
 
 ```markdown
 # Unit Test Cases — {Project Name}
@@ -202,7 +206,7 @@ Write all 5 files completely. No placeholders. Write each in full before startin
 
 Cover: every service method with business logic, every validation function, every utility function, every error handling path. Derive from business rules in `business-rules.md`.
 
-### File 3 — `projects/{slug}/team/tester/test-cases-integration.md`
+### File 3 — `$OUTPUT_DIR/test-cases-integration.md`
 
 ```markdown
 # Integration Test Cases — {Project Name}
@@ -222,7 +226,7 @@ Cover: every service method with business logic, every validation function, ever
 
 Cover: every API endpoint from the BE pr-description.md, auth middleware behavior, database constraint validation, error responses.
 
-### File 4 — `projects/{slug}/team/tester/test-cases-e2e.md`
+### File 4 — `$OUTPUT_DIR/test-cases-e2e.md`
 
 ```markdown
 # End-to-End Test Cases — {Project Name}
@@ -247,7 +251,7 @@ N. {Final assertion}
 
 Cover: every Essential user story's happy path, critical error paths (invalid login, unauthorized access, validation failures), cross-feature flows.
 
-### File 5 — `projects/{slug}/team/tester/bug-report-template.md`
+### File 5 — `$OUTPUT_DIR/bug-report-template.md`
 
 ```markdown
 # Bug Report Template — {Project Name}
@@ -317,7 +321,7 @@ Proceed to Step 5.
 - **Attempt 1 or 2:** `[Tester] Retrying (attempt {n+1}/3)...` Rewrite failing files. Validate again.
 - **Attempt 3:** HARD STOP. Write:
 
-`projects/{slug}/validation-errors/tester-attempt-3.md`:
+`$OUTPUT_DIR/../../validation-errors/tester-attempt-3.md`:
 ```markdown
 # Validation Error Log — Tester Agent
 timestamp: {ISO 8601 UTC}
@@ -332,7 +336,7 @@ recovery: Run /team-test --project {slug} to retry
 Output and stop:
 ```
 [Tester] ✗ Validation failed on attempt 3/3 — HARD STOP
-Error log: projects/{slug}/validation-errors/tester-attempt-3.md
+Error log: $OUTPUT_DIR/../../validation-errors/tester-attempt-3.md
 Action: run /team-test --project {slug} to retry manually
 ```
 
@@ -342,11 +346,11 @@ Action: run /team-test --project {slug} to retry manually
 
 Output:
 ```
-[Tester] ✓ Written: projects/{slug}/team/tester/test-plan.md
-[Tester] ✓ Written: projects/{slug}/team/tester/test-cases-unit.md
-[Tester] ✓ Written: projects/{slug}/team/tester/test-cases-integration.md
-[Tester] ✓ Written: projects/{slug}/team/tester/test-cases-e2e.md
-[Tester] ✓ Written: projects/{slug}/team/tester/bug-report-template.md
+[Tester] ✓ Written: $OUTPUT_DIR/test-plan.md
+[Tester] ✓ Written: $OUTPUT_DIR/test-cases-unit.md
+[Tester] ✓ Written: $OUTPUT_DIR/test-cases-integration.md
+[Tester] ✓ Written: $OUTPUT_DIR/test-cases-e2e.md
+[Tester] ✓ Written: $OUTPUT_DIR/bug-report-template.md
 [Tester] ✓ Validation passed (attempt {n})
 [Gate 2] {✓ UAT Readiness DECLARED | ✗ NOT READY — reason}
 
