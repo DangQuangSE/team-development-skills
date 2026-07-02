@@ -75,6 +75,11 @@
             "type": "command",
             "command": "node .claude/hooks/run.js .claude/hooks/pre_write_validator.py",
             "timeout": 15
+          },
+          {
+            "type": "command",
+            "command": "node .claude/hooks/run.js .claude/hooks/plan_validator.py",
+            "timeout": 10
           }
         ]
       }
