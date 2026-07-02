@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python .claude/hooks/pre_srs.py",
+            "command": "python hooks/pre_srs.py",
             "timeout": 20
           }
         ]
@@ -18,7 +18,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python .claude/hooks/post_srs.py",
+            "command": "python hooks/post_srs.py",
             "timeout": 25
           }
         ]

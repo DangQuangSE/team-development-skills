@@ -11,13 +11,13 @@ version: 1.1.0
 
 | File | Covers |
 |------|--------|
-| `references/api-design.md` | REST, GraphQL, gRPC — URL rules, status codes, protocol selection |
-| `references/authentication.md` | OAuth 2.1, JWT, RBAC, MFA, session management |
-| `references/security.md` | OWASP Top 10 (2025), rate limiting, headers, secrets |
-| `references/performance.md` | Indexing, caching patterns, load balancing, async processing |
-| `references/architecture.md` | Microservices patterns, event-driven, CQRS, scalability |
-| `references/testing.md` | TDD, test pyramid, contract testing, migration tests |
-| `references/code-quality.md` | SOLID, design patterns, refactoring signals |
+| `.codex/skills/backend-mindset/references/api-design.md` | REST, GraphQL, gRPC — URL rules, status codes, protocol selection |
+| `.codex/skills/backend-mindset/references/authentication.md` | OAuth 2.1, JWT, RBAC, MFA, session management |
+| `.codex/skills/backend-mindset/references/security.md` | OWASP Top 10 (2025), rate limiting, headers, secrets |
+| `.codex/skills/backend-mindset/references/performance.md` | Indexing, caching patterns, load balancing, async processing |
+| `.codex/skills/backend-mindset/references/architecture.md` | Microservices patterns, event-driven, CQRS, scalability |
+| `.codex/skills/backend-mindset/references/testing.md` | TDD, test pyramid, contract testing, migration tests |
+| `.codex/skills/backend-mindset/references/code-quality.md` | SOLID, design patterns, refactoring signals |
 
 ## Quick Decision Guide
 

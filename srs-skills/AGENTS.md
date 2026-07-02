@@ -7,14 +7,14 @@ readable by any LLM. No tool-specific syntax is required to follow them.
 
 ## Claude Code
 
-`srs-skills` có sẵn `.claude/` tích hợp — dùng ngay khi mở folder này trong Claude Code:
+Mở `srs-skills/` trực tiếp trong Claude Code — skills và hooks được phát hiện tự động từ `settings.json`:
 
 ```
 srs-skills/
-  .claude/skills/srs-generator/SKILL.md   ← /cl:srs  (quick SRS from existing reqs)
-  .claude/skills/srs-workflow/SKILL.md    ← /cl:srs-flow  (full pipeline: brainstorm → SRS)
-  skills/srs-generator/references/        ← shared references (srs-template, gap-guide)
-  skills/srs-workflow/references/         ← workflow references (brainstorm-guide, plan-structure)
+  skills/srs-generator/SKILL.md   ← /cl:srs  (quick SRS from existing reqs)
+  skills/srs-workflow/SKILL.md    ← /cl:srs-flow  (full pipeline: brainstorm → SRS)
+  skills/srs-generator/references/  ← shared references (srs-template, gap-guide)
+  skills/srs-workflow/references/   ← workflow references (brainstorm-guide, plan-structure)
 ```
 
 | Skill | Invoke | Use when |
@@ -26,16 +26,15 @@ Copy to another project:
 
 ```bash
 # Quick SRS skill only
-cp -r srs-skills/.claude/skills/srs-generator <your-project>/.claude/skills/
-cp -r srs-skills/skills/srs-generator/references <your-project>/.claude/skills/srs-generator/
+cp -r srs-skills/skills/srs-generator <your-project>/skills/srs-generator/
 
 # Full workflow skill (includes above references)
-cp -r srs-skills/.claude/skills/srs-workflow <your-project>/.claude/skills/
-cp -r srs-skills/skills/srs-workflow/references <your-project>/.claude/skills/srs-workflow/
+cp -r srs-skills/skills/srs-workflow <your-project>/skills/srs-workflow/
 
 # Automation scripts
 cp -r srs-skills/scripts <your-project>/
-cp -r srs-skills/.claude/hooks <your-project>/.claude/
+cp -r srs-skills/hooks <your-project>/hooks/
+cp srs-skills/settings.json <your-project>/settings.json
 ```
 
 ---

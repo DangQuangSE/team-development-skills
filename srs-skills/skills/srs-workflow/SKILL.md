@@ -1,6 +1,26 @@
-# srs-workflow — Full SRS Workflow (Agent-Agnostic)
+---
+name: cl:srs-flow
+description: >
+  Full SRS workflow: Brainstorm → Spec → Plan (per-section files) → User Review
+  → SRS Generation → Validation → Improvement Report → Context Save.
+  Use when user provides a project topic and wants a complete requirements pipeline.
+user-invocable: true
+metadata:
+  use_when: User gives a project topic/idea and wants a full SRS produced end-to-end
+  do_not_use_when: User only wants a quick SRS from existing requirements (use /cl:srs instead)
+  hard_rules: >
+    NEVER proceed to the next phase without explicit user confirmation.
+    NEVER guess or assume — if unclear, ask immediately.
+    NEVER truncate output — files have no word limit (SRS can be 300+ pages).
+    ALL questions must have answer options where possible — never open-ended only.
+  references:
+    - skills/srs-workflow/references/brainstorm-guide.md
+    - skills/srs-workflow/references/plan-structure-guide.md
+    - skills/srs-generator/references/srs-template.md
+    - skills/srs-generator/references/gap-detection-guide.md
+---
 
-**Invocation:** `@srs-workflow` or paste this skill's content as a system prompt.
+# cl:srs-flow — Full SRS Workflow
 
 ```
 Phase 0  Topic Intake
@@ -17,92 +37,89 @@ Phase 9  Context Save
 
 **Output directory:** `projects/{slug}/`
 
-**Hard rules (enforce throughout):**
-- NEVER proceed to next phase without explicit user confirmation
-- NEVER guess or assume — if unclear, ask immediately
-- NEVER truncate output — files have no word limit (SRS can be 300+ pages)
-- ALL questions must have answer options — never open-ended only
-
-**Reference files:**
-- `skills/srs-workflow/references/brainstorm-guide.md`
-- `skills/srs-workflow/references/plan-structure-guide.md`
-- `skills/srs-generator/references/srs-template.md`
-- `skills/srs-generator/references/gap-detection-guide.md`
-
 ---
 
 ## Phase 0 — Topic Intake
 
-Receive the user's topic. Do NOT ask questions yet.
+Receive the user's topic (1 sentence to 1 paragraph). Do NOT ask questions yet.
 
-Identify: Domain / Scale signals / Any constraints mentioned.
+Identify:
+- Domain (e-commerce, healthcare, fintech, internal tool, SaaS, etc.)
+- Scale signals (startup, enterprise, MVP, etc.)
+- Any constraints mentioned
 
-Echo back:
+Echo back a 3-line summary:
 ```
 Topic:      {topic}
 Domain:     {detected domain}
 Scale:      {detected scale or "unknown"}
 ```
 
-State: "Starting deep brainstorm. I will ask questions by category before writing anything."
+Then state: "Starting deep brainstorm. I will ask questions by category before writing anything."
 Proceed to Phase 1.
 
 ---
 
 ## Phase 1 — Deep Brainstorm
 
-**Hard rule: Do not proceed to Phase 2 until you can confidently answer ALL of:**
+**Hard rule: AI must not proceed to Phase 2 until it can confidently answer ALL of:**
 - Who are ALL actors (primary + secondary + external systems)?
-- What are ALL core features?
+- What are ALL core features (not just mentioned ones — infer and confirm)?
 - What are the explicit system boundaries (in scope / out of scope)?
 - What are the technical constraints?
 - What are the business rules and compliance requirements?
 
-Load `skills/srs-workflow/references/brainstorm-guide.md` for domain-specific questions.
+Load `skills/srs-workflow/references/brainstorm-guide.md` for domain-specific question sets.
 
 ### Round structure
 
-Each round covers ONE question category. Max 5 questions per round.
-Present concrete options — never purely open-ended.
+Each round: ask ONE category of questions using `AskUserQuestion`.
+Maximum 5 questions per round. Present concrete options wherever possible — never ask
+open-ended questions when a multiple-choice with "Other" covers the space.
 
-**[ASK USER — Round 1 — Actors & Users]**
-Ask: primary users, secondary users, admin roles, external systems/APIs.
-Present role options with descriptions. Wait for answer before Round 2.
+**Mandatory rounds (in order):**
 
-**[ASK USER — Round 2 — Core Features]**
-Present domain-derived feature checklist with sub-options for each cluster.
-Mark selections as [CONFIRMED]. Infer missing features — ask to confirm or reject.
-Wait for answer before Round 3.
+**Round 1 — Actors & Users**
+Ask about: primary users, secondary users, admin roles, external systems/APIs.
+For each actor type: present role options with descriptions. Wait for answers.
 
-**[ASK USER — Round 3 — Scope Boundary]**
-Present two-column table: proposed IN scope vs. proposed OUT scope.
-Ask user to move items or add new ones.
-HARD-BLOCK: never proceed without explicit in/out boundary.
-Wait for answer before Round 4.
+**Round 2 — Core Features**
+Present a feature checklist derived from the domain + topic.
+For each feature cluster: show sub-options (e.g., authentication: email/password | OAuth | SSO | all).
+Mark user selections as [CONFIRMED]. Infer likely features not mentioned — ask to confirm or reject.
+Wait for answers.
 
-**[ASK USER — Round 4 — Technical Constraints]**
-Ask: tech stack, hosting, integrations, security/compliance standards,
-performance targets (with numeric examples), timeline/budget.
-Wait for answer before Round 5.
+**Round 3 — Scope Boundary**
+Present a two-column table: proposed IN scope vs. proposed OUT scope.
+Ask user to move items or add new ones. Hard-block on scope: NEVER proceed without explicit
+in/out boundary.
+Wait for answers.
 
-**[ASK USER — Round 5 — Business Rules & Edge Cases]**
-Ask: data ownership, roles/permissions model, pricing logic, regulatory requirements,
-key failure scenarios.
-Wait for answer.
+**Round 4 — Technical Constraints**
+Ask about: tech stack, hosting, existing systems to integrate, security/compliance standards,
+performance targets (give numeric examples), timeline/budget signals.
+Wait for answers.
+
+**Round 5 — Business Rules & Edge Cases**
+Ask about: data ownership, roles/permissions model, pricing/billing logic (if applicable),
+regulatory requirements, key failure scenarios the system must handle gracefully.
+Wait for answers.
 
 **After Round 5:** Run completeness check:
-- Any actor still undefined? → ask NOW
-- Any feature with unclear scope? → ask NOW
-- Missing NFR baseline? → ask NOW
+- Any actor still undefined? → ask NOW before proceeding.
+- Any feature with unclear scope? → ask NOW.
+- Missing NFR baseline? → ask NOW.
 
-**[GATE]** Zero open items required to proceed. State: "Brainstorm complete. Proceeding to spec."
+**[GATE]** Only proceed to Phase 2 when completeness check passes with zero open items.
+State: "Brainstorm complete. I now have enough information to write the spec. Proceeding."
 
 ---
 
 ## Phase 2 — Spec Writing
 
-Write `projects/{slug}/spec.md`. No word limit.
+Write `projects/{slug}/spec.md` using the spec template structure.
 
+**No word limit.** Write every section fully — do not summarize or truncate.
 - Every actor: full description, access rights, experience level
 - Every feature: stated in user's words + AI-expanded detail
 - Every constraint: verbatim + implication
@@ -110,7 +127,12 @@ Write `projects/{slug}/spec.md`. No word limit.
 - Business rules: numbered, precise
 - NFR targets: numeric where confirmed, [TBD with context] where not
 
-Output: "Spec written: projects/{slug}/spec.md — §1…§N"
+After writing, output:
+```
+Spec written: projects/{slug}/spec.md
+Sections: §1 ... §N
+Word count: ~{N}
+```
 
 Proceed to Phase 3.
 
@@ -118,17 +140,22 @@ Proceed to Phase 3.
 
 ## Phase 3 — Options Gate
 
-**[ASK USER]**
+Present the following menu using `AskUserQuestion`:
+
 ```
 Spec is ready. What would you like to do next?
 
-A) Write plan          → per-section plan files, then review
-B) Re-read spec        → show full spec.md for review/editing
-C) Adjust brainstorm   → return to Phase 1 for additions/changes
+A) Write plan          → break SRS into per-section plan files, then review
+B) Re-read spec        → show full spec.md content for review/editing
+C) Adjust brainstorm   → return to Phase 1 to add/change requirements
 D) Jump to SRS         → skip planning, generate SRS directly (not recommended)
 ```
 
-Route: B → show spec → return here | C → Phase 1 | D → Phase 6 | A → Phase 4.
+Wait for user choice. Route accordingly.
+B → display spec.md, then return to Phase 3.
+C → return to Phase 1 Round that covers the gap.
+D → skip to Phase 6.
+A → proceed to Phase 4.
 
 ---
 
@@ -154,14 +181,16 @@ plan/
   appendix-b-open-issues.md
 ```
 
-For each file:
-- Write full planned content — no word limit
-- Include every sub-item, FR stubs with "shall", NFR targets
-- Tag: `[NEEDS USER INPUT: {what}]` for anything still unclear
+**For each file:**
+- Write the full planned content for that SRS section
+- Include: what will be written, every sub-item, FR list with "shall" stubs, NFR targets
+- No word limit — plan files are the blueprint, they must be unambiguous
+- Tag any item still needing user input: `[NEEDS USER INPUT: {what}]`
 
-Output a summary table after all files are written:
+After all plan files are written, output a summary table:
 ```
 | File | Section | FRs planned | NFRs planned | Open items |
+|------|---------|------------|--------------|------------|
 ```
 
 Proceed to Phase 5.
@@ -170,22 +199,21 @@ Proceed to Phase 5.
 
 ## Phase 5 — User Review
 
-Show summary table. Then:
+Present summary table from Phase 4. Then ask via `AskUserQuestion`:
 
-**[ASK USER]**
 ```
 Plan is ready for review. What would you like to do?
 
 A) Approve plan → proceed to SRS generation
-B) Modify section → which section(s)?
+B) Modify section → specify which section(s) to change
 C) Add features → return to Phase 1 Round 2
-D) Show full plan file → which file?
+D) Show full plan file → specify which file to display
 ```
 
-If modify: update relevant plan file(s) and return to this gate.
-**[GATE]** Only proceed to Phase 6 on explicit "Approve plan".
+If user modifies: update the relevant plan file(s) and return to this gate.
+**[GATE]** Only proceed to Phase 6 on explicit "Approve plan" (option A).
 
-State when approved: "Plan approved. Beginning SRS generation."
+When approved, state: "Plan approved. Beginning SRS generation."
 
 ---
 
@@ -208,20 +236,20 @@ srs/
   appendix-b-open-issues.md
 ```
 
-Load `skills/srs-generator/references/srs-template.md` for each section's format.
+Load and follow `skills/srs-generator/references/srs-template.md` for each section's format.
 
 **FR format (mandatory):**
 ```
 FR-NN [Essential|Conditional|Optional]
 Requirement:  The system shall {verb} {object} when {condition}.
-Actor | Precondition | Given | When | Then | Source
+Actor / Precondition / Given / When / Then / Source
 ```
 
 **NFR format:** ISO/IEC 25023 Quality Attribute Scenario — numeric Response Measure only.
 
-No word limit. Each file must be complete. Total may reach 300+ pages across all files.
+**No word limit.** Each file must be complete. A full SRS across all files may reach 300+ pages — this is normal and expected.
 
-Also generate `projects/{slug}/srs/00-master-index.md` linking all section files.
+Also generate `projects/{slug}/srs/00-master-index.md` linking all section files with word counts.
 
 Proceed to Phase 7.
 
@@ -229,19 +257,23 @@ Proceed to Phase 7.
 
 ## Phase 7 — Auto-Validate
 
-Run:
+Run the validator across the whole SRS directory at once:
+
 ```bash
 python scripts/srs_validator.py --dir projects/{slug}/srs/
 ```
 
-Output full validation table + summary:
+Output the full validation table. Then summarize:
+
 ```
+## Validation Results
 Overall: COMPLIANT | PARTIALLY COMPLIANT | NON-COMPLIANT
-Errors:   N
-Warnings: N
+Errors:   N   (must fix before proceeding)
+Warnings: N   (captured in Phase 8 report)
 ```
 
-Fix all ERRORs immediately. WARN items go to Phase 8 report.
+For each ERROR: fix the affected SRS section file immediately, then re-run the validator.
+Do not leave any ERROR unresolved. WARN items do not block — capture in Phase 8.
 
 Proceed to Phase 8.
 
@@ -251,13 +283,13 @@ Proceed to Phase 8.
 
 Write `projects/{slug}/improvement-report.md`:
 
-- **Deferred features** — out-of-scope items likely to become v2 features
-- **Technical risks** — [TBD] NFRs, integration unknowns, compliance gaps
-- **Refinement suggestions** — FRs to split further, NFRs needing load-test data
-- **Next version candidates** — explicitly deferred features from brainstorm
-- **Validation warnings** — WARN items from Phase 7
+- **Deferred features** — items marked out-of-scope but flagged as likely future needs
+- **Technical risks** — NFRs with [TBD] targets, integration unknowns, compliance gaps
+- **Refinement suggestions** — FRs that could be split further, NFRs needing real load-test data
+- **Next version candidates** — features users mentioned but explicitly deferred
+- **Validation warnings** — WARN items from Phase 7 that should be resolved before dev
 
-No word limit. Reference exact FR/NFR IDs and section numbers.
+No word limit. Be specific — reference exact FR/NFR IDs, section numbers, and user quotes from brainstorm.
 
 Proceed to Phase 9.
 
@@ -269,23 +301,23 @@ Write `projects/{slug}/_context/`:
 
 ```
 _context/
-  vision.md           ← goals, problem statement, success metrics
+  vision.md           ← project goals, problem statement, success metrics
   features.md         ← confirmed in/out scope feature list
   tech_stack.md       ← confirmed tech constraints
-  glossary.md         ← all defined terms from Appendix A
+  glossary.md         ← all terms defined in Appendix A
   quality_standards.md← confirmed NFR numeric targets
-  session-notes.md    ← key decisions, open questions, next steps
+  session-notes.md    ← key decisions made, open questions, next steps
 ```
 
-Output final summary:
+Then output final summary:
 ```
 Workflow complete.
 
 Project:    {name}
 Location:   projects/{slug}/
 SRS files:  {N} section files
-FRs:        {total}
-NFRs:       {total}
+FRs:        {total FR count}
+NFRs:       {total NFR count}
 Verdict:    {COMPLIANT | PARTIALLY COMPLIANT}
 Open items: {count} (see appendix-b-open-issues.md)
 

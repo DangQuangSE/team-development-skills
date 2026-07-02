@@ -41,16 +41,15 @@ Open `srs-skills/` as your Claude Code workspace. All skills and scripts are imm
 
 ```bash
 # Quick SRS skill only
-cp -r srs-skills/.claude/skills/srs-generator <your-project>/.claude/skills/
-cp -r srs-skills/skills/srs-generator/references <your-project>/.claude/skills/srs-generator/
+cp -r srs-skills/skills/srs-generator <your-project>/skills/srs-generator/
 
 # Full pipeline skill
-cp -r srs-skills/.claude/skills/srs-workflow <your-project>/.claude/skills/
-cp -r srs-skills/skills/srs-workflow/references <your-project>/.claude/skills/srs-workflow/
+cp -r srs-skills/skills/srs-workflow <your-project>/skills/srs-workflow/
 
 # Automation scripts (optional)
 cp -r srs-skills/scripts <your-project>/
-cp -r srs-skills/.claude/hooks <your-project>/.claude/
+cp -r srs-skills/hooks <your-project>/hooks/
+cp srs-skills/settings.json <your-project>/settings.json
 ```
 
 ---
@@ -254,8 +253,8 @@ The skill files are plain Markdown — any LLM that can follow written instructi
 ### Claude Code (built-in)
 
 ```
-.claude/skills/srs-generator/SKILL.md  ← /cl:srs
-.claude/skills/srs-workflow/SKILL.md   ← /cl:srs-flow
+skills/srs-generator/SKILL.md  ← /cl:srs
+skills/srs-workflow/SKILL.md   ← /cl:srs-flow
 ```
 
 Skills appear automatically in Claude Code's autocomplete when the workspace is opened.
@@ -308,7 +307,7 @@ No external APIs required. Python scripts are optional enhancements.
 If you use the [Virtual Team Skill](../virtual-team-skill/README.md), you can feed the generated spec directly to the BA agent:
 
 ```
-/team-ba --project my-app --level mid --srs
+/team-ba --project my-app --level mid --spec projects/my-app/spec.md
 ```
 
 The BA agent reads `projects/my-app/spec.md` (and `brainstorm.md` if present) instead of asking for a requirement description. This gives the entire team pipeline a precise, validated spec as its starting point.

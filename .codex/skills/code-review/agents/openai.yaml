@@ -1,4 +1,4 @@
 interface:
   display_name: "Code Review"
-  short_description: "Structured code review: request, receive, and verify reviews"
-  default_prompt: "Use /code-review to perform structured code reviews with reception, request, and verification practices."
+  short_description: "Apply code review practices with technical rigor, evidence-based claims, and verification over performative responses"
+  default_prompt: "Use code-review to verify code changes, apply feedback with technical rigor, request systematic reviews, and ensure verification gates before completion claims"

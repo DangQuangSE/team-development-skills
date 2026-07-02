@@ -32,13 +32,15 @@ All artifacts are stored locally under `projects/{slug}/team/`. No external serv
 
 ## Installation
 
-From the root of your Claude Code workspace, copy the `.claude/` directory:
+Open `virtual-team-skill/` directly as your Claude Code workspace — the `skills/` and `hooks/` directories are auto-detected from `settings.json` at the pack root.
+
+To install in another project:
 
 ```bash
-cp -r /path/to/MySkills/virtual-team-skill/.claude/ ./.claude/
+cp -r /path/to/MySkills/virtual-team-skill/skills/ <your-project>/skills/
+cp -r /path/to/MySkills/virtual-team-skill/hooks/ <your-project>/hooks/
+cp /path/to/MySkills/virtual-team-skill/settings.json <your-project>/settings.json
 ```
-
-Or open `virtual-team-skill/` directly as your Claude Code workspace — the `.claude/skills/` and `.claude/hooks/` directories are already in place.
 
 ---
 
@@ -130,8 +132,8 @@ Agents think deeply before writing any file. The depth adapts to level:
 
 | Command | Description |
 |---|---|
-| `/team "requirement" --level {level} [--project slug] [--context "..."] [--srs]` | Run full pipeline — all 7 agents |
-| `/team-ba "requirement" --level {level} [--project slug] [--context "..."] [--srs]` | BA phase only |
+| `/team "requirement" --level {level} [--project slug] [--context "..."] [--spec <path>]` | Run full pipeline — all 7 agents |
+| `/team-ba "requirement" --level {level} [--project slug] [--context "..."] [--spec <path>]` | BA phase only |
 | `/team-techlead [--project slug] [--context "..."]` | TechLead phase only |
 | `/team-pm [--project slug] [--context "..."]` | PM phase only |
 | `/team-dev [--project slug] [--context "..."]` | BE Dev phase only |
@@ -151,8 +153,8 @@ Project identifier (kebab-case, e.g. `my-app`, `todo-v1`). If omitted, auto-dete
 **`--context "{text or path}"`**
 Supplemental context injected into the agent's prompt. If the value starts with `./` or `/`, read as a file path; otherwise treated as inline text. Never written to artifact files.
 
-**`--srs`**
-BA agent reads `projects/{slug}/spec.md` (and `brainstorm.md` if present) as primary input. Requires SRS Workflow skills to have been run first (`/cl:srs-flow`).
+**`--spec <path>`**
+BA agent reads the markdown file at `{path}` as primary input. Works with any markdown format — SRS specs, brainstorm notes, free-form requirements. Path is relative to the pack root.
 
 ---
 
@@ -265,15 +267,15 @@ The level is read from `.project-config.md` automatically — no need to re-spec
 
 ---
 
-## SRS Workflow Integration
+## Spec File Integration
 
-If you have already used the SRS Workflow skills (`/cl:srs-flow`), pass the generated spec directly to the BA agent:
+Pass any markdown file as requirement input using `--spec`:
 
 ```
-/team-ba --project my-app --level mid --srs
+/team-ba --project my-app --level mid --spec projects/my-app/spec.md
 ```
 
-This reads `projects/my-app/spec.md` (and `brainstorm.md` if present) as the BA's primary input.
+This works with SRS specs, brainstorm outputs, PRDs, client emails — any markdown format.
 
 ---
 

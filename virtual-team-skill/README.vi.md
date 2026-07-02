@@ -42,10 +42,12 @@ Nếu chưa có, tải tại [python.org/downloads](https://python.org/downloads
 
 Mở thư mục `virtual-team-skill/` trong Claude Code là dùng được ngay — toàn bộ skills và hooks đã có sẵn.
 
-Nếu muốn dùng ở project khác, copy thư mục `.claude/` vào:
+Nếu muốn dùng ở project khác, copy skills và hooks:
 
 ```bash
-cp -r virtual-team-skill/.claude/ ten-project-cua-ban/.claude/
+cp -r virtual-team-skill/skills/ ten-project-cua-ban/skills/
+cp -r virtual-team-skill/hooks/ ten-project-cua-ban/hooks/
+cp virtual-team-skill/settings.json ten-project-cua-ban/settings.json
 ```
 
 ---
@@ -127,8 +129,8 @@ Tên định danh project (viết liền, không dấu, dùng dấu gạch ngang
 **`--context "nội dung hoặc đường dẫn"`**
 Thông tin bổ sung cho BA. Có thể là text thẳng hoặc đường dẫn file (bắt đầu bằng `./` hoặc `/`).
 
-**`--srs`**
-BA đọc từ file spec đã có (`projects/{slug}/spec.md`) thay vì nhập text. Dùng khi đã chạy SRS Workflow trước đó.
+**`--spec <path>`**
+BA đọc từ file markdown bất kỳ tại `{path}` làm input chính. Hỗ trợ mọi định dạng markdown — SRS spec, brainstorm notes, PRD, yêu cầu thô.
 
 ---
 
@@ -236,15 +238,15 @@ Level được đọc tự động từ `.project-config.md` — không cần nh
 
 ---
 
-## Kết hợp với SRS Workflow
+## Dùng file spec làm input
 
-Nếu đã dùng SRS Workflow (`/cl:srs-flow`) để tạo spec trước, truyền thẳng vào BA:
+Truyền file markdown bất kỳ qua `--spec`:
 
 ```
-/team-ba --project ten-project --level mid --srs
+/team-ba --project ten-project --level mid --spec projects/ten-project/spec.md
 ```
 
-BA sẽ đọc `projects/ten-project/spec.md` thay vì nhập text yêu cầu từ đầu.
+Hỗ trợ SRS specs, brainstorm outputs, PRD — bất kỳ định dạng markdown nào.
 
 ---
 

@@ -26,7 +26,7 @@ Create text-based diagrams using Mermaid.js v11 declarative syntax. Convert code
 - `gantt` - Project timelines
 - `journey` - User experience flows
 
-See `references/diagram-types.md` for all 24+ types with syntax.
+See `.codex/skills/mermaidjs-v11/references/diagram-types.md` for all 24+ types with syntax.
 
 ## Creating Diagrams
 
@@ -70,7 +70,7 @@ mmdc -i input.mmd -o output.png -t dark -b transparent
 mmdc -i diagram.mmd --cssFile style.css -o output.svg
 ```
 
-See `references/cli-usage.md` for Docker, batch processing, and advanced workflows.
+See `.codex/skills/mermaidjs-v11/references/cli-usage.md` for Docker, batch processing, and advanced workflows.
 
 ## JavaScript Integration
 
@@ -84,7 +84,7 @@ See `references/cli-usage.md` for Docker, batch processing, and advanced workflo
 <script>mermaid.initialize({ startOnLoad: true });</script>
 ```
 
-See `references/integration.md` for Node.js API and advanced integration patterns.
+See `.codex/skills/mermaidjs-v11/references/integration.md` for Node.js API and advanced integration patterns.
 
 ## Configuration & Theming
 
@@ -94,11 +94,11 @@ See `references/integration.md` for Node.js API and advanced integration pattern
 - `fontFamily`: Custom font specification
 - `securityLevel`: "strict", "loose", "antiscript"
 
-See `references/configuration.md` for complete config options, theming, and customization.
+See `.codex/skills/mermaidjs-v11/references/configuration.md` for complete config options, theming, and customization.
 
 ## Practical Patterns
 
-Load `references/examples.md` for:
+Load `.codex/skills/mermaidjs-v11/references/examples.md` for:
 - Architecture diagrams
 - API documentation flows
 - Database schemas
@@ -108,8 +108,8 @@ Load `references/examples.md` for:
 
 ## Resources
 
-- `references/diagram-types.md` - Syntax for all 24+ diagram types
-- `references/configuration.md` - Config, theming, accessibility
-- `references/cli-usage.md` - CLI commands and workflows
-- `references/integration.md` - JavaScript API and embedding
-- `references/examples.md` - Practical patterns and use cases
+- `.codex/skills/mermaidjs-v11/references/diagram-types.md` - Syntax for all 24+ diagram types
+- `.codex/skills/mermaidjs-v11/references/configuration.md` - Config, theming, accessibility
+- `.codex/skills/mermaidjs-v11/references/cli-usage.md` - CLI commands and workflows
+- `.codex/skills/mermaidjs-v11/references/integration.md` - JavaScript API and embedding
+- `.codex/skills/mermaidjs-v11/references/examples.md` - Practical patterns and use cases

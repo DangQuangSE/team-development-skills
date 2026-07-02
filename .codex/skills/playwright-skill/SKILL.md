@@ -4,11 +4,12 @@ description: Complete browser automation with Playwright. Auto-detects dev serve
 ---
 
 **IMPORTANT - Path Resolution:**
-Determine the skill directory from where this SKILL.md was loaded. Replace `$SKILL_DIR` with that path in all commands below.
+Determine the skill directory from where this SKILL.md was loaded. Replace `.codex/skills/playwright-skill` with that path in all commands below.
 
 Common installation paths:
 - Plugin system: `~/.claude/plugins/marketplaces/playwright-skill/skills/playwright-skill`
 - Manual global: `~/.claude/skills/playwright-skill`
+- Project-specific (codex): `.codex/skills/playwright-skill`
 - Project-specific: `<project>/.claude/skills/playwright-skill`
 
 # Playwright Browser Automation
@@ -19,7 +20,7 @@ Follow these steps in order for every request:
 
 **1. Detect dev servers** (localhost testing — run this first, always):
 ```bash
-cd $SKILL_DIR && node -e "require('./lib/helpers').detectDevServers().then(s => console.log(JSON.stringify(s)))"
+cd .codex/skills/playwright-skill && node -e "require('./lib/helpers').detectDevServers().then(s => console.log(JSON.stringify(s)))"
 ```
 - 1 server found → use it automatically, inform user
 - Multiple found → ask user which one
@@ -32,7 +33,7 @@ cd $SKILL_DIR && node -e "require('./lib/helpers').detectDevServers().then(s => 
 
 **3. Execute via run.js:**
 ```bash
-cd $SKILL_DIR && node run.js /tmp/playwright-test-<task>.js
+cd .codex/skills/playwright-skill && node run.js /tmp/playwright-test-<task>.js
 ```
 
 ## Script Template
@@ -60,7 +61,7 @@ const TARGET_URL = 'http://localhost:3001'; // detected or user-provided
 
 For quick one-off tasks, skip writing a file:
 ```bash
-cd $SKILL_DIR && node run.js "
+cd .codex/skills/playwright-skill && node run.js "
 await page.goto('http://localhost:3001');
 await page.screenshot({ path: '/tmp/shot.png', fullPage: true });
 console.log('Done');
@@ -73,7 +74,7 @@ Use files for: multi-step flows, responsive tests, anything user might re-run.
 ## Setup
 
 ```bash
-cd $SKILL_DIR && npm run setup
+cd .codex/skills/playwright-skill && npm run setup
 ```
 
 Only needed once. Installs Playwright and Chromium.
@@ -102,11 +103,11 @@ Identify automated traffic or pass auth tokens globally:
 ```bash
 # Single header
 PW_HEADER_NAME=X-Automated-By PW_HEADER_VALUE=playwright-skill \
-  cd $SKILL_DIR && node run.js /tmp/script.js
+  cd .codex/skills/playwright-skill && node run.js /tmp/script.js
 
 # Multiple headers (JSON)
 PW_EXTRA_HEADERS='{"X-Automated-By":"playwright-skill","X-Debug":"true"}' \
-  cd $SKILL_DIR && node run.js /tmp/script.js
+  cd .codex/skills/playwright-skill && node run.js /tmp/script.js
 ```
 
 Headers apply automatically when using `helpers.createContext(browser)`.
@@ -123,10 +124,10 @@ For raw Playwright API, use the injected `getContextOptionsWithHeaders(options)`
 
 ```bash
 # Playwright not installed
-cd $SKILL_DIR && npm run setup
+cd .codex/skills/playwright-skill && npm run setup
 
 # Module not found — always run via run.js, never node directly on script
-cd $SKILL_DIR && node run.js /tmp/script.js
+cd .codex/skills/playwright-skill && node run.js /tmp/script.js
 
 # Element not found — add explicit wait
 await page.waitForSelector('.target', { timeout: 10000 })

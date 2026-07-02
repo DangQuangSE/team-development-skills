@@ -34,8 +34,8 @@ Operator requirement
 
 | Command | Description |
 |---|---|
-| `/team "requirement" [--project slug] [--context "..."] [--srs]` | Full pipeline — all 7 agents |
-| `/team-ba "requirement" [--project slug] [--context "..."] [--srs]` | BA phase only |
+| `/team "requirement" [--project slug] [--context "..."] [--spec <path>]` | Full pipeline — all 7 agents |
+| `/team-ba "requirement" [--project slug] [--context "..."] [--spec <path>]` | BA phase only |
 | `/team-techlead [--project slug] [--context "..."]` | TechLead phase only |
 | `/team-pm [--project slug] [--context "..."]` | PM phase only |
 | `/team-dev [--project slug] [--context "..."]` | BE Dev phase only |

@@ -7,7 +7,7 @@ description: >
   Use per-agent commands (/team-ba, /team-techlead, etc.) for manual control.
 user-invocable: true
 metadata:
-  input: Requirement text + --level {level} (required) + optional --project {slug} + optional --context + optional --srs
+  input: Requirement text + --level {level} (required) + optional --project {slug} + optional --context + optional --spec <path>
   output: projects/{slug}/team/ (complete artifact set from all 7 phases)
   next: Review projects/{slug}/team/qa/sign-off.md for verdict
 ---
@@ -24,7 +24,7 @@ Your role: invoke each role skill in sequence using the Skill tool. You do NOT g
 
 Parse from the command:
 
-- **`"{requirement text}"`** — the operator's requirement. Required unless `--srs` is used.
+- **`"{requirement text}"`** — the operator's requirement. Required unless `--spec` is provided.
 - **`--project {slug}`** — project identifier. If not provided, use the current working directory name. Confirm: `"Using project slug: {slug}. Continue? (y/n)"` and wait for operator reply.
 - **`--level {level}`** — **REQUIRED.** Project depth level. Valid values:
   - `fresh` — School project (Fresher level): simple CRUD, Monolith, basic tests
@@ -33,7 +33,7 @@ Parse from the command:
   - `senior` — Production, high complexity: DDD, enterprise patterns, ≥80% coverage
   - If not provided, ask the operator: `"Choose a project level: fresh | junior | mid | senior"` and wait for reply before proceeding.
 - **`--context "{text or path}"`** — extra context to forward to the BA agent. If starts with `./` or `/`, read as file. Otherwise inline text.
-- **`--srs`** — forward to BA agent: read SRS workflow artifacts as primary input.
+- **`--spec <path>`** — forward to BA agent: read the markdown file at `{path}` as primary input. Works with any markdown format.
 
 ---
 
@@ -88,7 +88,7 @@ Use the Skill tool:
 
 ```
 skill: team-ba
-args: "{requirement text}" --project {slug} --level {level} {--srs if flag present} {--context "..." if provided}
+args: "{requirement text}" --project {slug} --level {level} {--spec <path> if flag present} {--context "..." if provided}
 ```
 
 **After the skill completes**, check its output:

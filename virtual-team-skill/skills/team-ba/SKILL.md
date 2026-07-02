@@ -3,11 +3,11 @@ name: team-ba
 description: >
   BA (Business Analyst) agent. Analyzes requirements and produces 4 artifact files:
   requirements.md, user-stories.md, acceptance-criteria.md, business-rules.md.
-  Use --srs to load from SRS workflow artifacts (spec.md / brainstorm.md).
+  Use --spec <path> to load requirements from any markdown file.
   Part of the Virtual Team Skill pipeline.
 user-invocable: true
 metadata:
-  input: Requirement text + --level {level} (required) + optional --project {slug} + optional --srs
+  input: Requirement text + --level {level} (required) + optional --project {slug} + optional --spec <path>
   output: projects/{slug}/team/ba/ (4 artifact files)
   next: /team-techlead
 ---
@@ -27,7 +27,7 @@ Parse from the command arguments:
 - **`--project {slug}`** — project identifier. If not provided, use the current working directory name as the slug. Confirm: output `"Using project slug: {slug}. Continue? (y/n)"` and wait for operator confirmation before proceeding.
 - **`--level {level}`** — project depth level. Valid values: `fresh` | `junior` | `mid` | `senior`. Required. If not provided, ask: `"Choose a project level: fresh | junior | mid | senior"` and wait for reply.
 - **`--context "{text or path}"`** — extra context. If the value starts with `./` or `/`, use the Read tool to read it as a file. Otherwise treat as inline text. Prepend to your analysis; do NOT write it to any artifact file.
-- **`--srs`** — read SRS workflow artifacts as primary requirement input instead of free-text.
+- **`--spec <path>`** — read a markdown file at `{path}` as primary requirement input. Works with any markdown format (not SRS-specific). The path is relative to the pack root.
 
 ---
 
@@ -76,13 +76,13 @@ Output: `[BA] ✓ Level noted: {level} | BA quality: senior (fixed)`
 
 ## Step 1 — Load Requirement Input
 
-**If `--srs` is present:**
+**If `--spec <path>` is present:**
 
-1. Use Read tool: `projects/{slug}/spec.md`. If missing → output `"Error: projects/{slug}/spec.md not found. Run /sr:spec first or provide requirement text directly."` STOP.
-2. Use Read tool: `projects/{slug}/brainstorm.md` (optional — read if it exists, skip if not).
-3. If runtime requirement text was ALSO provided alongside `--srs` AND it conflicts with `spec.md` content → note each conflict explicitly. SRS artifact content takes precedence. You will record conflicts in `## Conflicts Detected` section of `requirements.md`.
+1. Use Read tool to read the file at `{path}`. If missing → output `"Error: file not found at {path}. Provide a valid path to a markdown file."` STOP.
+2. Extract requirements from the markdown content. Treat any markdown format — the file may contain requirements text, user stories, SRS sections, or free-form notes. Do not assume a specific structure.
+3. If runtime requirement text was ALSO provided alongside `--spec` AND it conflicts with the file content → note each conflict explicitly. File content takes precedence. Record conflicts in `## Conflicts Detected` section of `requirements.md`.
 
-**If `--srs` is NOT present:**
+**If `--spec` is NOT present:**
 
 - Use the operator's inline requirement text as primary input.
 - If no text was provided → output `"Error: no requirement text provided. Usage: /team-ba \"requirement\" [--project {slug}]"` STOP.
@@ -168,7 +168,7 @@ Cover ALL requirements implied by the input. Number from REQ-01.
 
 ## Conflicts Detected
 
-{List conflicts if --srs input conflicted with runtime text. Otherwise: "None detected."}
+{List conflicts if --spec input conflicted with runtime text. Otherwise: "None detected."}
 
 ## Flags from Previous Agents
 

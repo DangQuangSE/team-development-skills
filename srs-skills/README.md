@@ -9,9 +9,9 @@ AI skill package tạo **Software Requirements Specification (IEEE 830-1998)** t
 Copy skills vào project của bạn:
 
 ```bash
-cp -r srs-skills/.claude/skills/sr-* <your-project>/.claude/skills/
-cp -r srs-skills/skills/srs-workflow/references <your-project>/.claude/skills/srs-workflow/
-cp -r srs-skills/skills/srs-generator/references <your-project>/.claude/skills/srs-generator/
+cp -r srs-skills/skills/sr-* <your-project>/skills/
+cp -r srs-skills/skills/srs-workflow/references <your-project>/skills/srs-workflow/
+cp -r srs-skills/skills/srs-generator/references <your-project>/skills/srs-generator/
 ```
 
 Hoặc mở thẳng thư mục `srs-skills/` trong Claude Code là dùng được ngay.
