@@ -1,0 +1,4 @@
+interface:
+  display_name: "Problem Solving"
+  short_description: "Six-technique toolkit for tackling hard engineering problems"
+  default_prompt: "Use /problem-solving to apply structured techniques like inversion, collision-zone thinking, and simplification cascades to complex problems."

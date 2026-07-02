@@ -1,0 +1,4 @@
+interface:
+  display_name: "Strategic Compact"
+  short_description: "Manage context window strategically with timely /compact suggestions"
+  default_prompt: "Use /strategic-compact to track context usage and suggest optimal /compact timing during long sessions."

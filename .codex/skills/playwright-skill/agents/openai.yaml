@@ -1,0 +1,4 @@
+interface:
+  display_name: "Playwright Automation"
+  short_description: "Browser automation and UI testing with Playwright"
+  default_prompt: "Use /playwright-skill to write, run, and debug Playwright browser automation scripts."

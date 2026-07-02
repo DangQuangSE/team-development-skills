@@ -1,0 +1,4 @@
+interface:
+  display_name: "Sequential Thinking"
+  short_description: "Step-by-step reasoning via sequential thinking MCP tool"
+  default_prompt: "Use /sequential-thinking for complex multi-step problems that benefit from structured sequential reasoning."

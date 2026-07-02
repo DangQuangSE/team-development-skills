@@ -1,0 +1,4 @@
+interface:
+  display_name: "Mermaid Diagrams"
+  short_description: "Generate 24+ diagram types using Mermaid.js v11 syntax"
+  default_prompt: "Use /mermaidjs-v11 to create flowcharts, sequence diagrams, ER diagrams, and 20+ other Mermaid diagram types."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Backend Development"
+  short_description: "Build robust APIs, auth, databases, performance, security, and scalability"
+  default_prompt: "Use $backend-mindset for comprehensive guidance on building production-ready backend systems"
