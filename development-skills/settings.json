@@ -1,0 +1,152 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node hooks/run.js hooks/session_init.py"
+          },
+          {
+            "type": "command",
+            "command": "node hooks/run.js hooks/subagent_init.py"
+          },
+          {
+            "type": "command",
+            "command": "node hooks/run.js hooks/session_start_context.py",
+            "timeout": 15
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node hooks/run.js hooks/dev_rules_reminder.py",
+            "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "node hooks/run.js hooks/caveman_watch.py",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Read|Write|Edit|Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node hooks/run.js hooks/privacy_block.py",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "Write|Edit|Bash|Agent",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node hooks/run.js hooks/suggest_compact.py",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "Retry",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node hooks/run.js hooks/retry_controller.py",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node hooks/run.js hooks/build_check.py",
+            "timeout": 30
+          },
+          {
+            "type": "command",
+            "command": "node hooks/run.js hooks/simplify_gate.py",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "Read|Grep|Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node hooks/run.js hooks/artifact_fold.py",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node hooks/run.js hooks/pre_compact.py",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node hooks/run.js hooks/session_end.py",
+            "async": true,
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node hooks/run.js hooks/session_end.py",
+            "async": true,
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  },
+  "ignorePatterns": [
+    "**/bin/**",
+    "**/obj/**",
+    "**/.vs/**",
+    "**/.git/**",
+    "**/Migrations/**",
+    "**/TestResults/**",
+    "**/coverage/**",
+    "**/.claude/session-data/**",
+    "**/*.suo",
+    "**/*.user",
+    "**/*.lock.json",
+    "**/node_modules/**"
+  ]
+}
