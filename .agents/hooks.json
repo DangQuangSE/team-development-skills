@@ -1,0 +1,175 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python .agents/scripts/session_init.py"
+          },
+          {
+            "type": "command",
+            "command": "python .agents/scripts/run_hook.py .claude/hooks/session_start_context.py"
+          },
+          {
+            "type": "command",
+            "command": "python .agents/scripts/run_hook.py .claude/hooks/subagent_init.py"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python .agents/scripts/dev_rules_reminder.py"
+          },
+          {
+            "type": "command",
+            "command": "python .agents/scripts/run_hook.py .claude/hooks/caveman_watch.py"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python .agents/scripts/strict_gate.py write"
+          },
+          {
+            "type": "command",
+            "command": "python .agents/scripts/run_hook.py .claude/hooks/pre_write_validator.py"
+          },
+          {
+            "type": "command",
+            "command": "python .agents/scripts/plan_validator.py"
+          },
+          {
+            "type": "command",
+            "command": "python .agents/scripts/run_hook.py .claude/hooks/level_gate.py"
+          },
+          {
+            "type": "command",
+            "command": "python .agents/scripts/run_hook.py .claude/hooks/privacy_block.py"
+          }
+        ]
+      },
+      {
+        "matcher": "Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python .agents/scripts/strict_gate.py edit"
+          },
+          {
+            "type": "command",
+            "command": "python .agents/scripts/run_hook.py .claude/hooks/suggest_compact.py"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python .agents/scripts/strict_gate.py bash"
+          },
+          {
+            "type": "command",
+            "command": "python .agents/scripts/run_hook.py .claude/hooks/retry_controller.py"
+          }
+        ]
+      },
+      {
+        "matcher": "Agent",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python .agents/scripts/strict_gate.py agent"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python .agents/scripts/run_hook.py .claude/hooks/build_check.py"
+          },
+          {
+            "type": "command",
+            "command": "python .agents/scripts/run_hook.py .claude/hooks/simplify_gate.py"
+          },
+          {
+            "type": "command",
+            "command": "python .agents/scripts/strict_gate.py post_write"
+          }
+        ]
+      },
+      {
+        "matcher": "Read|Grep|Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python .agents/scripts/run_hook.py .claude/hooks/artifact_fold.py"
+          }
+        ]
+      },
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python .agents/scripts/run_hook.py .claude/hooks/flag_aggregator.py"
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python .agents/scripts/run_hook.py .claude/hooks/pre_compact.py"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python .agents/scripts/run_hook.py .claude/hooks/session_end.py"
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python .agents/scripts/run_hook.py .claude/hooks/session_end.py"
+          }
+        ]
+      }
+    ]
+  },
+  "rules": [
+    "strict-compliance",
+    "code-quality",
+    "skill-enforcement"
+  ]
+}
