@@ -1,116 +1,149 @@
 ---
 name: ck:plan-json
-description: Create a structured JSON plan from a spec or feature description. Outputs plan.json — parseable by AI for step-by-step autonomous execution + debugging. Use when you want a machine-readable plan that ck:cook can execute with exact step tracking.
+description: Create a machine-readable phased JSON plan bundle from a spec or feature description. Produces a compact master manifest plus per-phase step files for resumable ck:cook execution.
 user-invocable: true
 ---
 
-# ck:plan-json — Structured JSON Planning
+# ck:plan-json — Phased JSON Planning
 
-Generates `plans/{slug}/plan.json` with explicit steps, status tracking, file dependencies, and debug log slots — designed for AI-driven autonomous coding.
+Every mode always creates `plans/{slug}/plan.json` and one or more phase JSON files. The master stays compact so an AI executor loads step detail only for the active phase.
+
+No legacy or single-file format compatibility is supported.
 
 ---
 
 ### Step 0 — Load Input
 
 Resolve the primary requirement input in this order:
-1. `--spec <path>` — load the spec.md at `{path}`. This is the preferred input.
-2. If no spec: `{inline text}` — use the command-line description as requirement.
-3. If neither: ask "Describe what you want to build, or provide a path to spec.md".
+
+1. `--spec <path>` — preferred: load the supplied `spec.md`.
+2. If no spec is supplied, use the inline feature description or requirement text.
+3. If neither exists, ask for a description or spec path.
 
 Also accept:
-- `--project {slug}` — project id (default: CWD name)
-- `--mode {fast|hard}` — fast for single-file, hard for multi-phase (default: auto-detect from scope)
+
+- `--project {slug}` — project ID; default is the current directory name.
+- `--mode {fast|hard}` — override automatic scope detection.
+- `--output <path>` — master entry point; default is `plans/{slug}/plan.json`. Phase files are siblings beside this master.
 
 ---
 
-### Step 1 — Scope Analysis
+### Step 1 — Analyze Scope and Phases
 
-Analyze the requirement to determine:
+Report:
 
-```
+```text
 Scope:
-  Phases:   [N]
-  Files:    [N total, N new, N modify]
-  Complexity: [Fast | Hard]
+  Phases: {N}
+  Files: {N total, N new, N modify}
+  Complexity: {Fast | Hard}
 ```
 
-- **Fast** — 1 phase, ≤3 files, single component, no external dependencies
-- **Hard** — 2+ phases, 4+ files, multiple components, external integrations
+- **Fast** — one small component and at most three affected files. Fast creates exactly one phase JSON file.
+- **Hard** — two or more phases, at least four files, multiple components, or external integrations.
 
-If hard and no spec provided → suggest "/ck:brainstorm first? [Y/n]"
+If Hard has no spec, suggest `/ck:brainstorm` before continuing.
+
+Decompose work into ordered, dependency-aware phases. Use deterministic kebab-case names and `phase-{phase_id:02d}-{name}.json` filenames. Maximum 15 steps per phase; add another phase when more steps are needed.
 
 ---
 
-### Step 2 — Generate plan.json
+### Step 2 — Generate Phase Files First
 
-Write `plans/{slug}/plan.json` with the following exact structure:
+Phase files contain and own detailed steps. Write every complete phase file first, before the master exists or is updated.
+
+Each phase file uses this structure:
 
 ```json
 {
   "plan_id": "{slug}",
-  "goal": "{one-line description of what the plan delivers}",
+  "phase_id": 1,
+  "name": "setup-project",
+  "goal": "Initialize the project",
+  "status": "pending",
   "current_step": 1,
-  "global_context": {
-    "framework": "{detected framework or empty}",
-    "architecture": "{architectural pattern}",
-    "target_folder": "{primary output directory}",
-    "constraints": []
-  },
   "steps": [
     {
       "step_id": 1,
-      "phase": "{kebab-case-phase-name}",
-      "description": "{actionable description of what to do in this step}",
+      "description": "Create the project structure",
       "status": "pending",
       "input_files": [],
-      "output_files": ["{path/to/file/to/create}"],
+      "output_files": ["src/README.md"],
       "ai_generated_code": "",
       "debug_logs": [],
-      "success_criteria": ["{verifiable condition}"]
+      "success_criteria": ["The expected file exists"]
     }
   ]
 }
 ```
 
-**Rules:**
-- `current_step`: always `1` at creation (ck:cook increments it)
-- `status`: `"pending"` for all steps (ck:cook updates to in_progress/completed/failed)
-- `input_files`: list of files that must exist BEFORE this step (from prior steps or existing codebase)
-- `output_files`: files this step creates/modifies
-- `ai_generated_code`: leave empty string — ck:cook fills this with generated code paths
-- `debug_logs`: leave empty array — ck:cook appends debug entries on failure
-- `success_criteria`: specific, verifiable conditions (not "should work" — "All unit tests pass")
+Rules:
 
-**Phase naming convention:**
-| Phase | When |
-|---|---|
-| `setup-project` | First phase — init, deps, config |
-| `implement-{domain}` | Core feature logic |
-| `implement-api` | API endpoints |
-| `implement-ui` | Frontend components |
-| `add-tests` | Test coverage |
-| `integrate` | Wire components together |
-| `document` | Docs, README |
+- Step IDs are unique, sequential, and one-indexed within the phase.
+- `input_files` must already exist or be produced by earlier steps or dependency phases.
+- `output_files` lists every file created or modified.
+- `success_criteria` contains at least one automation-verifiable condition.
+- `ai_generated_code` starts as an empty string and `debug_logs` starts as an empty array.
 
 ---
 
-### Step 3 — Validate plan.json
+### Step 3 — Generate the Master Last
 
-Read back the written file and validate:
+Write the master last, after all referenced phase files exist. `plan.json` is the orchestration manifest and contains ordered phase entries; the master must not contain inline steps.
 
-1. `plan_id` matches `{slug}`
-2. `steps` has at least 1 entry
-3. Every step has unique `step_id`
-4. Every step's `input_files` references files from prior steps or existing glob patterns
-5. Every step has ≥1 `success_criteria`
-6. All `status` values are `"pending"`
-
-If validation fails: fix the issues and overwrite. If passes:
-
+```json
+{
+  "plan_id": "{slug}",
+  "goal": "{one-line deliverable}",
+  "status": "pending",
+  "current_phase": 1,
+  "global_context": {
+    "framework": "{detected framework or empty}",
+    "architecture": "{detected pattern or empty}",
+    "target_folder": "{primary output directory}",
+    "constraints": []
+  },
+  "phases": [
+    {
+      "phase_id": 1,
+      "name": "setup-project",
+      "description": "Initialize project structure",
+      "file": "phase-01-setup-project.json",
+      "status": "pending",
+      "depends_on": []
+    }
+  ]
+}
 ```
-[ck:plan-json] ✓ plans/{slug}/plan.json written
-Steps: {N}
+
+All plan, phase, and step statuses start as `pending`. `current_phase` starts at `1`, and every phase `current_step` starts at `1`.
+
+Dependencies may reference unique earlier phase IDs only. A step object appears in exactly one phase file and is never duplicated in the master.
+
+---
+
+### Step 4 — Mandatory Bundle Validation
+
+Mandatory validation must use the master path so the bundle validator checks the manifest and every referenced sibling:
+
+```text
+python skills/ck-plan-json/hooks/plan_validator.py plans/{slug}/plan.json
+```
+
+If validation fails, fix the relevant phase or master file and rerun validation. Do not report success until the validator exits with code `0`.
+
+On success, report exactly these bundle details:
+
+```text
+[ck:plan-json] ✓ phased plan bundle written
+Master path: plans/{slug}/plan.json
+Phase paths:
+  - plans/{slug}/phase-01-{name}.json
 Mode: {Fast | Hard}
+Phase count: {N}
+Total step count: {N}
 
 Next: /ck:cook --json plans/{slug}/plan.json
 ```
+
+Use `references/plan-schema.json`, its referenced canonical phase file, and `rules/plan-design.md` as the detailed contract.
