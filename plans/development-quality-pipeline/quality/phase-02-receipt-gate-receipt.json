@@ -1,0 +1,17 @@
+{
+  "target": "phase-02-receipt-gate",
+  "verdict": "APPROVED",
+  "policy_version": "1.0.0",
+  "report_path": "plans/development-quality-pipeline/quality/phase-02-receipt-gate-quality-report.json",
+  "reviewed_files": [
+    ".claude/settings.json",
+    "development-skills/hooks/quality_receipt_gate.py",
+    "development-skills/skills/ck-quality/SKILL.md",
+    "development-skills/skills/ck-quality/references/receipt-schema.json",
+    "development-skills/skills/ck-quality/references/report-schema.json",
+    "development-skills/skills/ck-quality/scripts/receipt.py"
+  ],
+  "source_fingerprint": "sha256:37fc62c4592eba1cd344430fbd4d7b2a11a52f5a2c4e5e885a7fdfe340ab627b",
+  "reviewed_at": "2026-07-11T01:00:00Z",
+  "open_blocking_findings": 0
+}
