@@ -132,7 +132,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node .claude/hooks/run.js .claude/hooks/pre_compact.py",
+            "command": "node .claude/hooks/compact_90_guard.js",
             "timeout": 5
           }
         ]
@@ -165,6 +165,12 @@
       }
     ]
   },
+  "statusLine": {
+    "type": "command",
+    "command": "node .claude/hooks/compact_90_guard.js --track",
+    "padding": 0,
+    "refreshInterval": 5
+  },
   "ignorePatterns": [
     "**/bin/**",
     "**/obj/**",
@@ -180,6 +186,7 @@
     "**/node_modules/**"
   ],
   "env": {
-    "CLAUDE_CODE_DISABLE_1M_CONTEXT": "true"
+    "CLAUDE_CODE_DISABLE_1M_CONTEXT": "true",
+    "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "90"
   }
 }
