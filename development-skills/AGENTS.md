@@ -14,10 +14,10 @@ Open `development-skills/` in Claude Code. Skills appear in autocomplete.
 |---------|-------------|
 | `/backend-mindset` | Backend development guidance |
 | `/ck:brainstorm` | Explore solutions before coding |
-| `/ck:cook` | Implement from a plan (markdown or JSON) |
+| `/ck:cook` | Execute Markdown plans or phased JSON bundles |
 | `/ck:fix` | Diagnose and fix bugs |
 | `/ck:plan` | Create implementation plans (markdown) |
-| `/ck:plan-json` | Create structured JSON plans for AI-driven execution |
+| `/ck:plan-json` | Create phased JSON plan bundles (compact master + per-phase files) |
 | `/code-review` | Request structured code review |
 | `/mermaidjs-v11` | Create diagrams |
 | `/playwright-skill` | Browser automation |
