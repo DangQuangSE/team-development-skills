@@ -30,6 +30,15 @@
 - A completed plan has every phase `completed` and `current_phase = phase_count + 1`.
 - A master phase entry and its phase file have equal status at every stable checkpoint.
 
+## Quality and Testing State
+
+- A phase carries an optional `design_constraints` array (non-empty strings) and an optional `quality_profile` object — repository conventions, boundaries, applicable rules, and allowed exceptions gathered during Cook's preflight step. Both are written once, before implementation, and never invented from a generic template.
+- A phase carries an optional `quality` object: `status` (`not_evaluated` | `changes_required` | `approved`), `report` and `receipt` paths, and `remediation_cycles`. `ck:quality --gate` owns writing this; `ck:cook` only reads it.
+- A phase carries an optional `testing` object: `status` (`not_started` | `blocked_on_quality` | `in_progress` | `passed` | `failed`) and a `report` path. `ck:test` owns writing this; it defaults to `not_started` until that skill runs.
+- All four fields are optional so plans written before this schema addition remain valid. A present field must still match its documented shape — missing fields receive runtime defaults, not validation errors.
+- The master's compact phase entry mirrors only `quality_status` and `testing_status` (never the full profile/report). When both the entry and its phase file declare a status, they must match.
+- `phase.status = "completed"` already implies quality approval: the receipt-gate hook blocks that specific transition unless a fresh receipt exists for the phase. No separate "awaiting quality" status value is needed in the execution state machine — `quality.status` carries that information without perturbing the existing pending/in_progress/completed/blocked cursor logic.
+
 ## Step Quality
 
 - **Step atomicity.** Each step produces at least one verifiable output, such as a file change or passing test.

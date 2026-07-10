@@ -7,7 +7,7 @@
 
 - [x] Phase 1: Shared quality core and standalone `ck:quality`
 - [x] Phase 2: Receipt validator and completion gate
-- [ ] Phase 3: Plan, Cook, Fix, and Review integration
+- [x] Phase 3: Plan, Cook, Fix, and Review integration
 - [ ] Phase 4: Standalone `ck:test` and TDD handoff
 - [ ] Phase 5: Platform sync, documentation, and validation
 
@@ -28,9 +28,9 @@
 ## Session Notes
 <!-- Updated by cook automatically — do not edit manually -->
 
-**Last active:** 2026-07-11 01:00
-**Phase in progress:** phase-03-pipeline-integration
-**Status:** Phase 1 and Phase 2 completed with issued receipts. Phase 3 not started.
+**Last active:** 2026-07-11 02:00
+**Phase in progress:** phase-04-test-skill
+**Status:** Phase 1, 2, and 3 completed with issued receipts. Phase 4 not started.
 
 ### Decisions made this session
 
@@ -42,9 +42,12 @@
 - `ck:quality --gate`/`--verify` now issue the receipt automatically on `APPROVED` (SKILL.md Step 5); `--audit`/`--diff`/`--changed` never do, even with `--save`.
 - To make the hook and skill actually runnable now (rather than waiting for the formal Phase 5 sync), `ck-quality`'s skill dir, the `quality-reviewer` agent, and `quality_receipt_gate.py` were copied verbatim into `.claude/skills/`, `.claude/agents/`, and `.claude/hooks/`, and the hook was registered in `.claude/settings.json`. This is a pragmatic head start, not a substitute for Phase 5's full `.codex`/`.agents` mirroring and drift-check pass.
 - Hook end-to-end verified in a scratch git repo outside this repo (JSON phase block/allow, master `plan.json`, Markdown checkbox transition-only detection, tamper detection via fingerprint mismatch), then dogfooded for real: `ck:quality --gate` ran against Phase 2's own files, produced `plans/development-quality-pipeline/quality/phase-02-receipt-gate-quality-report.json` (APPROVED, zero findings) and its receipt, and the live hook allowed checking Phase 2's box in this file because of it.
-- Did not touch `code-reviewer.md`, README.md, or AGENTS.md — those are Phase 3 and Phase 5 scope respectively.
+- Phase 3 rewired the whole planning-to-implementation pipeline for the quality/test state: `planner`, `plan-reviewer`, `ck-plan`, `ck-plan-json` (schema, validator, reference example, design rules) now produce/require `design_constraints` + `quality`/`testing` state on every phase; `ck-cook` was rewritten as an implementation-only pipeline (preflight → validate → execute → build gate → mandatory `ck:quality` gate → approved handoff), with `--no-test` removed and `--fast` no longer able to skip the gate; `ck-fix` gained `--from-quality`/`--from-test` report-scoped input and a Step 2.5 stale-receipt re-verification; `code-reviewer` had its architecture/maintainability checks removed in favor of an explicit "Out of Scope — ck:quality's territory" section, so the two reviewers no longer overlap.
+- Found and closed two gaps left over from editing `.claude/agents/*.md` directly during Phase 3: (1) the canonical `development-skills/agents/{code-reviewer,planner,plan-reviewer}.md` had not received the same edits — synced them to match; (2) `ck-plan/SKILL.md` and the `ck`/`cook.md`/`ck`/`plan.md` command metadata still referenced the now-removed `--no-test` flag and had no Design Constraints/Quality-Testing-State step — updated both.
+- Dogfooded the gate again for Phase 3 itself: `ck:quality --gate` ran against all 16 phase-3 files (agents × canonical+mirror, ck-plan, ck-plan-json × 5 files, ck-cook, ck-fix, 2 command files), returned APPROVED with zero findings, and issued `plans/development-quality-pipeline/quality/phase-03-pipeline-integration-receipt.json`, which unblocked checking Phase 3's box.
+- Did not touch README.md or AGENTS.md, and did not touch `.codex`/`.agents`/`flutter-skills` mirror drift for the skills changed in Phase 3 (still reference the deprecated `--no-test` flag) — both are explicitly Phase 5 scope per its Design Constraints ("skills mirror canonical contents exactly").
 
 ### Next immediate action
 
-Start Phase 3: Pipeline Integration (`plans/development-quality-pipeline/phase-03-pipeline-integration.md`) — update planner/plan-reviewer/ck-plan/ck-plan-json for quality+test state, then rewrite `ck-cook` as preflight → implement → quality gate → remediation → approved handoff, then update `ck-fix`/code-reviewer to consume quality/test artifacts.
+Start Phase 4: Standalone `ck:test` and TDD Handoff (`plans/development-quality-pipeline/phase-04-test-skill.md`) — `ck-cook`'s `--tdd` path currently blocks waiting for a `RED_READY` artifact from `/ck:test --tdd --prepare`, but that skill does not exist yet.
 
