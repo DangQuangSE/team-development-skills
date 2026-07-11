@@ -1,6 +1,7 @@
 `/fix` — Diagnose and fix bugs
 
 1. Load the `ck-fix` skill from `.agents/skills/ck-fix/SKILL.md`
-2. Execute the fix pipeline: Scout → Diagnose → Fix → Review → Finalize
-3. All steps are mandatory unless `--fast` is specified
-4. Output the fix summary and changed files
+2. Accept a bug description, `--from-quality <report>`, or `--from-test <report>`.
+3. Apply only the report-scoped/root-cause fix.
+4. Production changes invalidate the prior receipt; run `ck:quality --verify` before finalizing.
+5. Output the fix summary, changed files, and next verification command.

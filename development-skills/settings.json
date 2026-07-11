@@ -65,6 +65,11 @@
             "type": "command",
             "command": "node hooks/run.js skills/ck-plan-json/hooks/plan_validator.py",
             "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "node hooks/run.js hooks/quality_receipt_gate.py",
+            "timeout": 10
           }
         ]
       },

@@ -20,9 +20,9 @@ Apply code review practices with technical rigor, evidence-based claims, and ver
 
 | Practice            | When to load                                          | File |
 | ------------------- | ----------------------------------------------------- | ---- |
-| Receiving feedback  | Unclear/questionable feedback, conflict with reviewer | `.codex/skills/code-review/references/code-review-reception.md` |
-| Requesting review   | After each task, before merge — use `/code-review`    | `.codex/skills/code-review/references/requesting-code-review.md` |
-| Verification gates  | Before any completion/success claim                   | `.codex/skills/code-review/references/verification-before-completion.md` |
+| Receiving feedback  | Unclear/questionable feedback, conflict with reviewer | `references/code-review-reception.md` |
+| Requesting review   | After each task, before merge — use `/code-review`    | `references/requesting-code-review.md` |
+| Verification gates  | Before any completion/success claim                   | `references/verification-before-completion.md` |
 
 ## Overview
 
@@ -52,7 +52,7 @@ Trigger when:
 - Before merging to main branch
 - After fixing complex bugs
 
-Use `/code-review` (local) or `/code-review <PR>` (PR mode). Cook/fix pipelines invoke the `code-reviewer` agent automatically.
+Use `/code-review` (local) or `/code-review <PR>` (PR mode). `ck:cook`, `ck:quality`, and `ck:test` remain separate gates; run final code review after their required artifacts are current.
 
 ### Verification Gates
 Trigger when:
@@ -92,7 +92,7 @@ READ → UNDERSTAND → VERIFY → EVALUATE → RESPOND → IMPLEMENT
 - If unclear: STOP and ask for clarification on ALL unclear items first
 - YAGNI check: search for usage before implementing suggested features
 
-**Full protocol:** `.codex/skills/code-review/references/code-review-reception.md`
+**Full protocol:** `references/code-review-reception.md`
 
 ## Verification Gates Protocol
 
@@ -105,7 +105,7 @@ IDENTIFY command → RUN full command → READ output → VERIFY confirms claim 
 ### Red Flags — STOP
 Using "should"/"probably"/"seems to", expressing satisfaction before verification, committing without verification, trusting agent reports.
 
-**Full protocol:** `.codex/skills/code-review/references/verification-before-completion.md`
+**Full protocol:** `references/verification-before-completion.md`
 
 ## Bottom Line
 

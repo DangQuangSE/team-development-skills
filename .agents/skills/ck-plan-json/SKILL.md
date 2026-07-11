@@ -62,6 +62,17 @@ Each phase file uses this structure:
   "goal": "Initialize the project",
   "status": "pending",
   "current_step": 1,
+  "design_constraints": [
+    "Fast mode may reduce ceremony but never skips the quality gate"
+  ],
+  "quality_profile": {
+    "repository_conventions": {},
+    "boundaries": {},
+    "applicable_rules": [],
+    "allowed_exceptions": []
+  },
+  "quality": { "status": "not_evaluated", "report": "", "receipt": "", "remediation_cycles": 0 },
+  "testing": { "status": "not_started", "report": "" },
   "steps": [
     {
       "step_id": 1,
@@ -84,6 +95,7 @@ Rules:
 - `output_files` lists every file created or modified.
 - `success_criteria` contains at least one automation-verifiable condition.
 - `ai_generated_code` starts as an empty string and `debug_logs` starts as an empty array.
+- `design_constraints`, `quality_profile`, `quality`, and `testing` are optional; leave them at their `pending`-equivalent defaults (empty arrays/objects, `not_evaluated`, `not_started`) at plan-creation time — see `rules/plan-design.md` § Quality and Testing State for what owns each field and when it changes.
 
 ---
 
@@ -110,7 +122,9 @@ Write the master last, after all referenced phase files exist. `plan.json` is th
       "description": "Initialize project structure",
       "file": "phase-01-setup-project.json",
       "status": "pending",
-      "depends_on": []
+      "depends_on": [],
+      "quality_status": "not_evaluated",
+      "testing_status": "not_started"
     }
   ]
 }
@@ -120,6 +134,8 @@ All plan, phase, and step statuses start as `pending`. `current_phase` starts at
 
 Dependencies may reference unique earlier phase IDs only. A step object appears in exactly one phase file and is never duplicated in the master.
 
+`quality_status`/`testing_status` are the master's compact mirror of each phase's `quality.status`/`testing.status` — never the full profile or report. Both start at `not_evaluated`/`not_started` and must match the phase file's values whenever both declare one.
+
 ---
 
 ### Step 4 — Mandatory Bundle Validation
@@ -127,8 +143,10 @@ Dependencies may reference unique earlier phase IDs only. A step object appears 
 Mandatory validation must use the master path so the bundle validator checks the manifest and every referenced sibling:
 
 ```text
-python skills/ck-plan-json/hooks/plan_validator.py plans/{slug}/plan.json
+python {ck-plan-json-skill-root}/hooks/plan_validator.py plans/{slug}/plan.json
 ```
+
+Resolve `{ck-plan-json-skill-root}` from the `SKILL.md` currently loaded so the command works in pack-root, Claude, Codex, and Antigravity installations.
 
 If validation fails, fix the relevant phase or master file and rerun validation. Do not report success until the validator exits with code `0`.
 

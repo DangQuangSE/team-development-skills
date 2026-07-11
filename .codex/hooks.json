@@ -47,6 +47,12 @@
             "command": "python .codex/hooks/plan_validator.py",
             "commandWindows": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File .codex/hooks/run_python.ps1 .codex/hooks/plan_validator.py",
             "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "python .codex/hooks/quality_receipt_gate.py",
+            "commandWindows": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File .codex/hooks/run_python.ps1 .codex/hooks/quality_receipt_gate.py",
+            "timeout": 10
           }
         ]
       }

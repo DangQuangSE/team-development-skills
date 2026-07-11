@@ -1,15 +1,15 @@
 # Plan: Development Quality Pipeline
 
 **Mode:** Hard
-**Status:** in_progress
+**Status:** completed
 
 ## Phases
 
 - [x] Phase 1: Shared quality core and standalone `ck:quality`
 - [x] Phase 2: Receipt validator and completion gate
 - [x] Phase 3: Plan, Cook, Fix, and Review integration
-- [ ] Phase 4: Standalone `ck:test` and TDD handoff
-- [ ] Phase 5: Platform sync, documentation, and validation
+- [x] Phase 4: Standalone `ck:test` and TDD handoff
+- [x] Phase 5: Platform sync, documentation, and validation
 
 ## Architecture Decisions
 
@@ -28,9 +28,9 @@
 ## Session Notes
 <!-- Updated by cook automatically — do not edit manually -->
 
-**Last active:** 2026-07-11 02:00
-**Phase in progress:** phase-04-test-skill
-**Status:** Phase 1, 2, and 3 completed with issued receipts. Phase 4 not started.
+**Last active:** 2026-07-11 11:20
+**Phase in progress:** none
+**Status:** All five phases implemented and quality-approved. Testing remains an explicit `/ck:test` follow-up.
 
 ### Decisions made this session
 
@@ -47,7 +47,17 @@
 - Dogfooded the gate again for Phase 3 itself: `ck:quality --gate` ran against all 16 phase-3 files (agents × canonical+mirror, ck-plan, ck-plan-json × 5 files, ck-cook, ck-fix, 2 command files), returned APPROVED with zero findings, and issued `plans/development-quality-pipeline/quality/phase-03-pipeline-integration-receipt.json`, which unblocked checking Phase 3's box.
 - Did not touch README.md or AGENTS.md, and did not touch `.codex`/`.agents`/`flutter-skills` mirror drift for the skills changed in Phase 3 (still reference the deprecated `--no-test` flag) — both are explicitly Phase 5 scope per its Design Constraints ("skills mirror canonical contents exactly").
 
+- Phase 4 added `development-skills/skills/ck-test/` (`SKILL.md` plus `references/test-report-schema.json` and `references/tdd-ready-schema.json`), generalized `development-skills/agents/tester.md` to the new report/verdict shape and production-code-off-limits constraint, and added `development-skills/commands/ck/test.md`. `ck:test` owns all verification (default/`--unit`/`--integration`/`--e2e`/`--all`/`--verify`/`--all-phases`/`--tdd --prepare`/`--tdd --verify`), never edits production code, never calls `ck:fix` itself, and blocks every mode except `--tdd --prepare` on a missing or stale quality receipt. Removed the now-stale "ck:test not yet available" hedges from `ck-cook/SKILL.md` now that the skill exists.
+- Ran `/simplify` (4 parallel review angles) over the new `ck-test` files before gating; most findings were false positives relative to already-established `ck-quality`/`ck-cook` conventions (annotated-example schema style, repeated "read sibling files" guidance) or would have been scope creep (a receipt/fingerprint system for the short-lived TDD-prepare artifact isn't warranted — the artifact is consumed within the same session and its integrity check is the `--tdd --verify` file diff, not a persistent completion gate like quality receipts). Applied two real fixes: clarified `--all-phases` writes one report per phase (never an aggregate), and pointed `testing.status`'s field shape at `plan-design.md` instead of redefining it.
+- Dogfooded the gate for Phase 4 itself: `ck:quality --gate` ran against all 6 phase-4 files, cross-checked ck-test's schemas against the actual contracts `ck-cook` (RED_READY artifact path/shape) and `ck-fix` (`--from-test` report consumption) already committed to — returned APPROVED with zero findings, issued `plans/development-quality-pipeline/quality/phase-04-test-skill-receipt.json`, which unblocked checking Phase 4's box.
+- Did not mirror `ck-test`, the updated `tester` agent, or `test.md` into `.claude`/`.codex`/`.agents` — consistent with Phase 3's decision, full mirroring is Phase 5 scope.
+
+- Phase 5 synchronized `ck-quality`, `ck-test`, `ck-cook`, `ck-fix`, `ck-plan`, `ck-plan-json`, and `code-review` across Claude, Codex, and Antigravity; preserved Codex-only `agents/openai.yaml` metadata and updated its prompts.
+- Added Claude, Codex apply-patch, and Antigravity receipt-hook registrations. Fixed Antigravity's hook wrapper to forward stdin instead of silently running JSON hooks with EOF.
+- Added standalone inline fallbacks for Quality and Tester when a named agent registry is unavailable, and replaced client-specific validator paths with installed-skill-root resolution.
+- Updated bootstrap/docs/context routing and final code-review handoff. JSON parsing, mirror drift, receipt freshness, and whitespace validation passed; Python bytecode compilation could not run because this environment has no installed Python interpreter.
+- Final review found and closed two HIGH bypasses: receipts are now bound to expected phase + filename + report target, and strict JSON validation rejects completed phase/master state without approved quality. Re-review returned APPROVED.
+
 ### Next immediate action
 
-Start Phase 4: Standalone `ck:test` and TDD Handoff (`plans/development-quality-pipeline/phase-04-test-skill.md`) — `ck-cook`'s `--tdd` path currently blocks waiting for a `RED_READY` artifact from `/ck:test --tdd --prepare`, but that skill does not exist yet.
-
+Run `/ck:test plans/development-quality-pipeline/plan.md` when functional testing of the workflow is desired, then perform final `/ck:code-review` before release.

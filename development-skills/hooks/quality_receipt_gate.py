@@ -23,7 +23,13 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent / "lib"))
-from ck_config_utils import is_enabled  # noqa: E402
+try:
+    from ck_config_utils import is_enabled  # noqa: E402
+except ImportError:
+    # Standalone Antigravity/Codex adapters may not install the Claude hook
+    # utility package. Receipt enforcement stays enabled by default.
+    def is_enabled(_name: str) -> bool:
+        return True
 
 sys.path.insert(0, str(Path(__file__).parent.parent / "skills" / "ck-quality" / "scripts"))
 from receipt import verify_receipt  # noqa: E402
@@ -205,7 +211,7 @@ def main() -> None:
 
     failures = []
     for target, receipt_path in required:
-        ok, errors = verify_receipt(receipt_path, repo_root=root)
+        ok, errors = verify_receipt(receipt_path, repo_root=root, expected_target=target)
         if not ok:
             try:
                 rel = receipt_path.relative_to(root)
@@ -231,5 +237,6 @@ def main() -> None:
 if __name__ == "__main__":
     try:
         main()
-    except Exception:
-        sys.exit(0)
+    except Exception as exc:
+        sys.stderr.write(f"[quality-receipt-gate] internal error: {exc}\n")
+        sys.exit(2)

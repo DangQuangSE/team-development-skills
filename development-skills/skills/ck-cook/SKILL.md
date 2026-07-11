@@ -16,7 +16,7 @@ Modes are mutually exclusive; Standard is the default:
 
 Composable flag:
 
-- **`--tdd`** — before implementing a phase, require a `RED_READY` test artifact prepared by `/ck:test --tdd --prepare`. If `ck:test` is not yet available in this installation, block and tell the user to run their project's test framework manually to confirm RED before proceeding.
+- **`--tdd`** — before implementing a phase, require a `RED_READY` test artifact prepared by `/ck:test --tdd --prepare`.
 
 `--no-test` is removed — Cook never owned tests, so there is nothing to opt out of. No old single-file JSON or mixed-format compatibility is supported. Markdown `plan.md` remains a separate input format.
 
@@ -58,8 +58,10 @@ BLOCKED: --tdd requires RED tests. Run /ck:test --tdd --prepare {phase} first.
 Run the Python bundle validator against the master before implementation:
 
 ```text
-python skills/ck-plan-json/hooks/plan_validator.py plans/{slug}/plan.json
+python {ck-plan-json-skill-root}/hooks/plan_validator.py plans/{slug}/plan.json
 ```
+
+Resolve `{ck-plan-json-skill-root}` from the installed skill directory for the active client.
 
 The validator may read the whole bundle mechanically; do not load inactive phase details into AI context. Read global context from the master once, and load or read detailed steps for only the active phase.
 
@@ -161,7 +163,7 @@ Runs once, after the final phase reaches `APPROVED` and its completion transitio
 - Cook has not run or verified tests. Print explicitly:
 
 ```text
-Testing: not run by Cook. Run /ck:test (once available) or your project's test suite before code review or release.
+Testing: not run by Cook. Run /ck:test or your project's test suite before code review or release.
 ```
 
 - Update user-facing documentation only when the implementation changed its contract (`docs-manager`; skip for `--fast`).

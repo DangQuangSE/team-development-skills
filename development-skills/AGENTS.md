@@ -18,6 +18,8 @@ Open `development-skills/` in Claude Code. Skills appear in autocomplete.
 | `/ck:fix` | Diagnose and fix bugs |
 | `/ck:plan` | Create implementation plans (markdown) |
 | `/ck:plan-json` | Create phased JSON plan bundles (compact master + per-phase files) |
+| `/ck:quality` | Standalone architecture and maintainability audit / mandatory phase gate |
+| `/ck:test` | Standalone testing and TDD orchestration |
 | `/code-review` | Request structured code review |
 | `/mermaidjs-v11` | Create diagrams |
 | `/playwright-skill` | Browser automation |

@@ -1,169 +1,191 @@
 ---
 name: ck:cook
-description: Implement a planned feature phase by phase. Use when the user says "cook this", "implement it", "let's build", "start coding", or passes a plan.md path. Spec-aware — auto-loads spec.md alongside plan for SDD+TDD. Modes (pick one): --fast (skip test/review), --hard (mandatory human approval). Composable flags (combine with any mode): --no-test (skip tester), --tdd (write failing tests before implementing).
+description: Implement a feature phase by phase from a phased JSON master or Markdown plan. Cook only writes code — it never writes or runs tests. Every phase goes through a mandatory quality gate (ck:quality) before it can be marked completed. Supports resumable state and TDD handoff to ck:test.
 user-invocable: true
 ---
 
-# ck:cook — Structured Implementation Pipeline
+# ck:cook — Implementation-Only Pipeline with a Mandatory Quality Gate
 
-Modes — mutually exclusive, pick one (default = Standard):
-- **Standard** — test + review, auto-approve if score ≥ 9.5 with 0 CRITICAL
-- **`--fast`** — skip tester and code-reviewer; git-manager only in Step 5
-- **`--hard`** — mandatory test + mandatory review, no auto-approve
+Cook's job ends at implementation, a compile/syntax check, and quality approval. It does not write or run tests (`ck:test` owns that) and does not re-score maintainability at the end (`ck:quality` already did, per phase).
 
-Composable flags — combine with any mode:
-- **`--no-test`** — skip tester; go directly to Step 3.S → Step 4
-- **`--tdd`** — write failing tests first, then implement until they pass
+Modes are mutually exclusive; Standard is the default:
 
----
+- **Standard** — quality gate is mandatory; auto-continue to the next phase once a phase is `APPROVED`.
+- **`--fast`** — minimal status ceremony; the quality gate still runs and still blocks — there is no flag that skips it.
+- **`--hard`** — same gate, plus mandatory human confirmation after each phase reaches `APPROVED` and again before the final push.
 
-### Step 0 — Plan Check
+Composable flag:
 
-When no plan path provided:
-1. Search `plans/` for any `plan.md` → ask: "Found `{path}`. Use this? [Y/n]"
-2. If none found → ask: "No plan found. Continue anyway? [y/N]" — if No, suggest `/ck:plan`
+- **`--tdd`** — before implementing a phase, require a `RED_READY` test artifact prepared by `/ck:test --tdd --prepare`.
 
-After resolving plan path: check for `spec.md` in the same directory. If found, load it — activates **spec-driven mode** for Steps 1 and 2.
+`--no-test` is removed — Cook never owned tests, so there is nothing to opt out of. No old single-file JSON or mixed-format compatibility is supported. Markdown `plan.md` remains a separate input format.
 
 ---
 
-### Step 1 — Load Plan / Detect Mode
+### Step 0 — Resolve the Plan
 
-Report what will be cooked:
+Accept:
 
+- `--json <path>` — phased JSON master `plan.json` entry point.
+- `--plan <path>` — Markdown `plan.md` entry point with sibling `phase-XX-*.md` files.
+
+When no path is supplied, search `plans/` for a master `plan.json`, then for `plan.md`, and ask before using the discovered plan. If neither exists, suggest `/ck:plan-json` or `/ck:plan`.
+
+Load adjacent `spec.md` when present. The spec supplies user-story coverage and TDD acceptance anchors.
+
+---
+
+### Step 1 — Preflight (Engineering Quality Profile)
+
+Run once per phase, before implementing its steps.
+
+Skip re-discovery when resuming a phase that already has this recorded: JSON — `quality_profile.applicable_rules` is a non-empty array; Markdown — a "Preflight:" line already exists under `## Design Constraints`. Either signal alone is sufficient to skip; do not re-read sibling files just because some sub-field looks sparse.
+
+1. Read the phase's own `## Design Constraints` (Markdown) or `design_constraints` (JSON), plus the plan's Architecture Decisions and Risks — these are phase-specific constraints, not invented generically.
+2. Read 2-3 sibling files outside the phase's scope to learn actual naming, constants/error, module-structure, and DI conventions already in use in this repository. Existing convention always outranks a generic default.
+3. Record the result as the phase's `quality_profile` (JSON: `repository_conventions`, `boundaries`, `applicable_rules`, `allowed_exceptions`) or as a "Preflight:" line appended to the phase's Design Constraints section (Markdown). This is read later by both Cook's own implementation and by `ck:quality --gate` — write it once, don't duplicate the discovery.
+
+If `--tdd`, also check for `plans/{slug}/tests/{phase}-tdd-ready.json` (or Markdown equivalent) with `status: RED_READY`. Missing artifact blocks with:
+
+```text
+BLOCKED: --tdd requires RED tests. Run /ck:test --tdd --prepare {phase} first.
 ```
-Plan: {Feature Name}
-Status: {status from plan.md}
+
+---
+
+### Step 2 — Validate and Resume a Phased JSON Plan
+
+Run the Python bundle validator against the master before implementation:
+
+```text
+python {ck-plan-json-skill-root}/hooks/plan_validator.py plans/{slug}/plan.json
+```
+
+Resolve `{ck-plan-json-skill-root}` from the installed skill directory for the active client.
+
+The validator may read the whole bundle mechanically; do not load inactive phase details into AI context. Read global context from the master once, and load or read detailed steps for only the active phase.
+
+`current_phase` selects the active phase reference. The active phase uses `current_step` to select its next step. Report `Phase {current_phase}, step {current_step}` with status:
+
+```text
+Plan: {plan_id} — {goal}
+Plan status: {status}
+Phase: {current_phase}/{phase_count} — {phase name} ({phase status})
+Step: {current_step}/{step_count} — {step status}
 Mode: {Standard | Fast | Hard}
-Test:  {default | --no-test | --tdd}
-Spec:  {plans/{slug}/spec.md — N P1 stories, N success criteria | none}
-Phases remaining:
-  [ ] Phase 1: ...
-  [ ] Phase 2: ...
+Quality: {quality_status} · Testing: {testing_status}
+Context: {framework} · {architecture}
 ```
 
-If spec loaded + `--tdd` not set:
-`Spec detected. Consider --tdd: acceptance criteria in spec.md are ready-made test anchors.`
+If bundle validation reports a phase/master status mismatch, inspect only the master and its active phase:
 
-If `## Session Notes` exists in plan.md: output resume state and continue from where it left off.
+1. If both identities match and the phase is exactly one legal monotonic transition ahead, reconcile the master with `reconcile_master`, write the master, and rerun bundle validation.
+2. If the master is ahead, identities differ, dependencies differ, or more than one transition must be inferred, block without mutation and request guidance.
+3. A matching state is a no-op.
 
-When no plan file provided: read the feature request, ask 2–3 clarifying questions, proceed once clear.
+An `in_progress` plan may point to a pending next phase after the previous phase completed. This is the valid ready-between-phases state.
+
+Dependency checks confirm every prerequisite phase is completed before any write, mutation, or activation. Invalid, incomplete, or forward dependencies block and stop execution.
 
 ---
 
-### Step 2 — Implement
+### Step 3 — Execute the Active JSON Phase
+
+Use full-document writes or reconstructable edits so the PreToolUse validator checks proposed content.
+
+#### Activate
+
+Activation writes the phase file first, setting its status and active step to `in_progress`; activation writes the master second, mirroring phase and plan status without advancing `current_phase`. Rerun bundle validation at the stable checkpoint.
+
+#### Implement Steps
+
+For the current step:
+
+1. Read its `input_files` for context.
+2. Implement its `description` and update only declared `output_files`.
+3. Verify every `success_criteria`.
+4. Record written paths in `ai_generated_code`.
+
+Step success only advances the phase `current_step`; step success does not update the master or `current_phase`. Mark the successful step `completed`, and activate the next phase-local step when one remains.
+
+On failure, keep `debug_logs` step-local in the phase file. Append a concise `{timestamp, error, attempted_fix}` record and retry with a different approach for up to 3 remediation cycles. Cycle 4 stops and escalates.
+
+#### Steps Complete → Build Gate
+
+When every step in the phase is `completed`, do not yet write the phase `status = completed` transition — that transition is quality-gated (Step 5). First run the Build Gate (Step 4).
+
+Blocking writes the phase file first with the active step and phase blocked; blocking writes the master second, mirrors blocked status, and does not advance either cursor. Preserve the failure diagnostics and request guidance.
+
+---
+
+### Step 3.M — Execute a Markdown Plan
 
 For each `phase-XX-*.md` in order:
 
-1. Read phase file — understand requirements, architecture, steps, success criteria
-2. Implement following codebase conventions
-3. Verify success criteria for the phase
-4. **If spec loaded**: `P1 coverage: {N}/{total} stories addressed this phase`
-5. Write (overwrite) `## Session Notes` in plan.md, then mark phase complete `- [x] Phase N: {name}`
-6. Report what was done
-
-**Session Notes template** (overwrite, never append):
-
-```markdown
-## Session Notes
-<!-- Updated by cook automatically — do not edit manually -->
-
-**Last active:** {YYYY-MM-DD HH:MM}
-**Phase in progress:** {phase-XX-name}
-**Status:** {one-line status}
-
-### Decisions made this session
-{bullet list of non-obvious decisions, or "(none)"}
-
-### Next immediate action
-{what cook will do next}
-```
-
-**Review Gate** — after each phase:
-- **Standard / `--hard`**: pause and wait for user approval
-- **`--fast`**: continue automatically
-
-Stop if: success criterion unverifiable, unexpected blocker, or phase needs user decisions not in the plan.
+1. Read phase requirements, Design Constraints, and steps.
+2. In `--tdd`, confirm the `RED_READY` artifact from Step 1 before implementing.
+3. Implement and verify the phase's Success Criteria.
+4. Record spec coverage when `spec.md` exists.
+5. Run the Build Gate (Step 4) and Quality Gate (Step 5) before updating `plan.md` progress or Session Notes for this phase.
 
 ---
 
-### Step 3 — Test (tester sub-agent)
+### Step 4 — Build Gate
 
-**`--fast`** / **`--no-test`**: skip → Step 3.S.
+Compilation or syntax validation only — Cook does not run unit or integration tests.
 
-**[Build Gate]**: verify compilation before tests. On failure: `[GATE FAIL] Build gate: compilation errors — fix before testing.`
-
-**Default**: spawn **`tester`** → writes tests, runs full suite (100% pass required) → on failure: spawn **`debugger`** → fix → re-test.
-
-**Remediation cycles**: each of cycles 1–3 must use a different approach than previous. Cycle 4: STOP.
-
-```
-[ESCALATION] Test remediation exhausted
-File:    {path/to/failing_test}
-Error:   {exact error message}
-Cycles:  {approach 1} | {approach 2} | {approach 3}
-Action:  Awaiting user guidance
-```
-
-**`--tdd`**: invert per phase:
-1. `tester` writes failing tests (red) — from `### Tests to Write First` or spec acceptance criteria
-2. Confirm red before implementing
-3. Implement until green, full suite passes
+1. Run the project's build/compile/lint/type-check command relevant to the changed files.
+2. On failure, use up to three distinct remediation approaches (spawn `debugger` if the failure is non-trivial) and rerun the Build Gate.
+3. A fourth failed cycle stops and escalates with the exact command, error, and attempted approaches.
 
 ---
 
-### Step 3.S — Auto-Simplify
+### Step 5 — Quality Gate (mandatory, never skipped)
 
-Check if `SIMPLIFY_TRIGGERED` in context (emitted by `code-simplifier` hook).
+Treat `ck:quality` as a black box: invoke it, act on its verdict, never second-guess or reimplement its severity rules here (those live in `ck:quality`'s own contract and may change independently of Cook).
 
-If triggered: invoke `simplify` skill on files edited this phase → delete simplify tracker → proceed to Step 4.
-If not triggered: skip silently.
+1. Invoke `ck:quality --gate <phase-file>` against exactly the files this phase created or modified.
+2. **`CHANGES_REQUIRED`** — fix every finding it lists as blocking, at the location it cites, then rerun the gate (`--verify` against the same report is acceptable once every listed finding has been addressed). Up to 3 remediation cycles; a 4th `CHANGES_REQUIRED` escalates to the human with the outstanding findings and attempted fixes.
+3. **`APPROVED`** — `ck:quality` has already issued the receipt. Write the phase file's `quality` object (`status: approved`, `report`, `receipt`) and the master's `quality_status: approved` mirror, then perform the completion transition: phase file first (`status: completed`, `current_step = step_count + 1`), master second (mirrors completion, advances `current_phase`). The receipt-gate hook enforces that this transition cannot happen without the fresh receipt just issued.
 
-Thresholds (`.ck.json` → `simplify.threshold`): `totalLoc` 400, `fileCount` 8, `singleFileLoc` 200.
+`--hard` additionally pauses here for explicit human confirmation before the completion transition, even though the verdict is already `APPROVED`. Standard and `--fast` continue automatically — a passing quality gate is proof enough; there is no separate numeric review score to check.
 
----
-
-### Step 4 — Code Review
-
-**`--fast`**: skip → Step 5.
-
-**[Test Gate]**: all tests must pass (or `--no-test` set).
-
-Spawn **`code-reviewer`**: correctness, security, regressions, quality → APPROVED / WARNING / BLOCK.
-- **Standard**: auto-approve if score ≥ 9.5 with 0 CRITICAL
-- **`--hard`**: no auto-approve — human must approve before Step 5
-- Fix/re-review up to 3 cycles (different approach each), then escalate
+If another phase remains, the master stays `in_progress` and points to the pending next phase — return to Step 1 (Preflight) for it. If the final phase completes, set plan `status = completed` and `current_phase = phase_count + 1`, and proceed to Step 6.
 
 ---
 
-### Step 5 — Finalize (MANDATORY)
+### Step 6 — Approved Handoff (Finalize)
 
-**[Approval Gate]**: code-reviewer APPROVED required (or `--fast` bypass).
+Runs once, after the final phase reaches `APPROVED` and its completion transition succeeds.
 
-**`project-manager`** (skip `--fast`): mark phases `[x]`, update plan status.
+- For JSON, verify every phase and step is already completed with `quality_status: approved`, verify both `count + 1` sentinels, then run strict bundle validation. Never synthesize completion for unexecuted or unapproved work.
+- For Markdown, mark only verified, quality-approved phases complete and update plan status and Session Notes.
+- Cook has not run or verified tests. Print explicitly:
 
-**`docs-manager`** (skip `--fast`): update docs, README, API contracts.
-
-**If spec loaded**: output before git-manager:
-```
-# Spec Coverage
-P1 stories:        {N}/{total} covered
-Success criteria:  {N}/{total} verifiable
-Uncovered P1:      {list any, or "none"}
+```text
+Testing: not run by Cook. Run /ck:test or your project's test suite before code review or release.
 ```
 
-**`git-manager`** (always): conventional commits → ask to push.
+- Update user-facing documentation only when the implementation changed its contract (`docs-manager`; skip for `--fast`).
+- Sync Markdown plan progress (`project-manager`; Markdown plans only).
+- Prepare conventional commit details and ask before pushing (`git-manager`, always) — the commit message must not claim tests pass, since Cook did not run them.
 
----
+Final summary:
 
-## Agents
+```text
+Plan: {plan_id}
+Result: {completed_phases}/{phase_count} phases, {completed_steps}/{step_count} steps — all quality-approved
+Blocked: {blocked_count}
+Debug cycles: {debug_log_count}
+Testing: not run by Cook — run /ck:test or the project test suite next
+```
 
-| Agent / Skill     | Step | Modes |
-|-------------------|------|-------|
-| `tester`          | 3    | Standard, `--hard` (skip for `--fast`, `--no-test`) |
-| `debugger`        | 3    | When tests fail |
-| `simplify` skill  | 3.S  | All (hook-driven) |
-| `code-reviewer`   | 4    | Standard, `--hard` (skip for `--fast`) |
-| `project-manager` | 5    | Standard, `--hard` (skip for `--fast`) |
-| `docs-manager`    | 5    | Standard, `--hard` (skip for `--fast`) |
-| `git-manager`     | 5    | Always (mandatory) |
+## Agents / Skills
+
+| Agent / Skill  | Step | Modes |
+|----------------|------|-------|
+| `debugger`     | 4    | Build Gate remediation |
+| `ck:quality`   | 5    | Standard, `--fast`, `--hard` — always runs, never skipped |
+| `project-manager` | 6 | Markdown plans |
+| `docs-manager` | 6    | Standard, `--hard` (skipped by `--fast`) |
+| `git-manager`  | 6    | All modes |

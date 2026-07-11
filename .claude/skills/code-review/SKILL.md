@@ -52,7 +52,7 @@ Trigger when:
 - Before merging to main branch
 - After fixing complex bugs
 
-Use `/code-review` (local) or `/code-review <PR>` (PR mode). Cook/fix pipelines invoke the `code-reviewer` agent automatically.
+Use `/code-review` (local) or `/code-review <PR>` (PR mode). `ck:cook`, `ck:quality`, and `ck:test` remain separate gates; run final code review after their required artifacts are current.
 
 ### Verification Gates
 Trigger when:

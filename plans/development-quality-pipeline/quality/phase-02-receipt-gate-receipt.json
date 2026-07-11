@@ -11,7 +11,7 @@
     "development-skills/skills/ck-quality/references/report-schema.json",
     "development-skills/skills/ck-quality/scripts/receipt.py"
   ],
-  "source_fingerprint": "sha256:37fc62c4592eba1cd344430fbd4d7b2a11a52f5a2c4e5e885a7fdfe340ab627b",
-  "reviewed_at": "2026-07-11T01:00:00Z",
+  "source_fingerprint": "sha256:f306c5445a8694a520a89ebffe88a91d67ccf38c1dd625ecd7342a9bfbc281e2",
+  "reviewed_at": "2026-07-11T04:30:00Z",
   "open_blocking_findings": 0
 }

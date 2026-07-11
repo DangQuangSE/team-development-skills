@@ -57,6 +57,10 @@
           {
             "type": "command",
             "command": "python .agents/scripts/run_hook.py .claude/hooks/privacy_block.py"
+          },
+          {
+            "type": "command",
+            "command": "python .agents/scripts/run_hook.py .agents/scripts/quality_receipt_gate.py"
           }
         ]
       },
@@ -70,6 +74,10 @@
           {
             "type": "command",
             "command": "python .agents/scripts/run_hook.py .claude/hooks/suggest_compact.py"
+          },
+          {
+            "type": "command",
+            "command": "python .agents/scripts/run_hook.py .agents/scripts/quality_receipt_gate.py"
           }
         ]
       },

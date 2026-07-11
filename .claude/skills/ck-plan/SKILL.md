@@ -1,6 +1,6 @@
 ---
 name: ck:plan
-description: Plan a feature or system before implementation. Use when the user says "plan this", "I want to build X", "how do I implement Y", or when /ck:brainstorm produces a spec.md. Always run before /ck:cook. Modes (pick one): --fast (simple, single-file), --hard (research + red-team + validate). Composable flags (combine with any mode): --no-test, --tdd — propagate into the cook pipeline.
+description: Plan a feature or system before implementation. Use when the user says "plan this", "I want to build X", "how do I implement Y", or when /ck:brainstorm produces a spec.md. Always run before /ck:cook. Modes (pick one): --fast (simple, single-file), --hard (research + red-team + validate). Composable flag (combine with any mode): --tdd — propagates into the cook pipeline. Every phase gets Design Constraints and Quality/Testing State — `ck:cook`'s quality gate is mandatory and cannot be opted out of.
 user-invocable: true
 ---
 
@@ -19,7 +19,7 @@ Before spawning any agents, detect mode and challenge scope:
 #   Complexity? → [Fast | Hard] — reasons: multi-file? unfamiliar? security?
 #
 # Mode: [Fast | Hard]
-# Test:  [default | --no-test | --tdd]
+# Test:  [default | --tdd]
 ```
 
 Mode auto-detection (override with explicit flag):
@@ -65,8 +65,8 @@ Spawn **2 `researcher` agents in parallel**:
 
 Spawn the **`planner` agent** with: feature description + mode + research reports + test flag + spec file path (if any).
 
+- Every phase gets a `## Design Constraints` section and a `## Quality and Testing State` section (quality: not evaluated, testing: not started) — `ck:cook`'s preflight and `ck:quality --gate` read these; they are never omitted, even in Fast mode.
 - **`--tdd`**: planner adds `### Tests to Write First` to each phase, derived from spec acceptance criteria
-- **`--no-test`**: planner notes `testing: skipped` in each phase header
 - **Spec provided**: planner maps each phase to the P1/P2/P3 stories it covers
 
 Agent writes:
@@ -103,7 +103,7 @@ Output the exact cook command:
 
 ```
 Ready to cook:
-/ck:cook [--fast | --hard] [--no-test | --tdd] plans/{slug}/plan.md
+/ck:cook [--fast | --hard] [--tdd] plans/{slug}/plan.md
 ```
 
 ---

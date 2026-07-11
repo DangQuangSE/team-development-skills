@@ -14,8 +14,59 @@ from typing import Any
 PLAN_STATUSES = {"pending", "in_progress", "completed", "blocked"}
 PHASE_STATUSES = PLAN_STATUSES
 STEP_STATUSES = {"pending", "in_progress", "completed", "failed", "blocked"}
+QUALITY_STATUSES = {"not_evaluated", "changes_required", "approved"}
+TESTING_STATUSES = {"not_started", "blocked_on_quality", "in_progress", "passed", "failed"}
 PHASE_FILE_RE = re.compile(r"^phase-(\d{2})-([a-z0-9]+(?:-[a-z0-9]+)*)\.json$")
 KEBAB_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
+
+
+def _enum_error(value: Any, allowed: set[str], label: str) -> str | None:
+    if not isinstance(value, str) or value not in allowed:
+        return f"{label} must be one of: {', '.join(sorted(allowed))}"
+    return None
+
+
+def _validate_quality_state(data: dict[str, Any], prefix: str) -> list[str]:
+    """Validate optional design_constraints/quality_profile/quality/testing fields.
+
+    All four fields are optional so plans written before this schema addition
+    remain valid; a present field must still have the correct shape.
+    """
+    errors: list[str] = []
+    if "design_constraints" in data:
+        constraints = data["design_constraints"]
+        if not isinstance(constraints, list) or any(
+            not isinstance(item, str) or not item.strip() for item in constraints
+        ):
+            errors.append(f"{prefix}.design_constraints must be an array of non-empty strings")
+    if "quality_profile" in data and not isinstance(data["quality_profile"], dict):
+        errors.append(f"{prefix}.quality_profile must be an object")
+    if "quality" in data:
+        quality = data["quality"]
+        if not isinstance(quality, dict):
+            errors.append(f"{prefix}.quality must be an object")
+        else:
+            error = _enum_error(quality.get("status"), QUALITY_STATUSES, f"{prefix}.quality.status")
+            if error:
+                errors.append(error)
+            for field in ("report", "receipt"):
+                if field in quality and not isinstance(quality[field], str):
+                    errors.append(f"{prefix}.quality.{field} must be a string")
+            if "remediation_cycles" in quality and (
+                not _is_int(quality["remediation_cycles"]) or quality["remediation_cycles"] < 0
+            ):
+                errors.append(f"{prefix}.quality.remediation_cycles must be a non-negative integer")
+    if "testing" in data:
+        testing = data["testing"]
+        if not isinstance(testing, dict):
+            errors.append(f"{prefix}.testing must be an object")
+        else:
+            error = _enum_error(testing.get("status"), TESTING_STATUSES, f"{prefix}.testing.status")
+            if error:
+                errors.append(error)
+            if "report" in testing and not isinstance(testing["report"], str):
+                errors.append(f"{prefix}.testing.report must be a string")
+    return errors
 
 
 def _is_int(value: Any) -> bool:
@@ -69,6 +120,8 @@ def validate_phase(data: Any, prefix: str = "phase") -> list[str]:
     status = data["status"]
     if not isinstance(status, str) or status not in PHASE_STATUSES:
         errors.append(f"{prefix}.status must be one of: {', '.join(sorted(PHASE_STATUSES))}")
+
+    errors.extend(_validate_quality_state(data, prefix))
 
     steps = data["steps"]
     if not isinstance(steps, list) or not steps:
@@ -148,6 +201,9 @@ def validate_phase(data: Any, prefix: str = "phase") -> list[str]:
     elif status == "completed":
         if cursor != count + 1 or any(item != "completed" for item in statuses):
             errors.append(f"{prefix} completed state requires current_step = step_count + 1 and all steps completed")
+        quality = data.get("quality")
+        if not isinstance(quality, dict) or quality.get("status") != "approved":
+            errors.append(f"{prefix} completed state requires quality.status = approved")
     elif status == "blocked":
         if not 1 <= cursor <= count:
             errors.append(f"{prefix}.current_step is out of range for blocked state")
@@ -255,6 +311,16 @@ def validate_bundle(master_path: str | Path, master_override: Any | None = None)
             errors.append(f"{prefix}.status is invalid")
         if "steps" in entry:
             errors.append(f"{prefix}.steps is forbidden; step detail belongs in the phase file")
+        if "quality_status" in entry:
+            error = _enum_error(entry["quality_status"], QUALITY_STATUSES, f"{prefix}.quality_status")
+            if error:
+                errors.append(error)
+        if "testing_status" in entry:
+            error = _enum_error(entry["testing_status"], TESTING_STATUSES, f"{prefix}.testing_status")
+            if error:
+                errors.append(error)
+        if entry.get("status") == "completed" and entry.get("quality_status") != "approved":
+            errors.append(f"{prefix} completed state requires quality_status = approved")
 
         dependencies = entry["depends_on"]
         if not isinstance(dependencies, list):
@@ -304,6 +370,14 @@ def validate_bundle(master_path: str | Path, master_override: Any | None = None)
             ):
                 if phase.get(field) != expected_value:
                     errors.append(f"phase-{phase_id:02d}.{field} does not match master")
+            if "quality_status" in entry:
+                phase_quality = phase.get("quality")
+                if not isinstance(phase_quality, dict) or phase_quality.get("status") != entry["quality_status"]:
+                    errors.append(f"phase-{phase_id:02d}.quality.status does not match master.quality_status")
+            if "testing_status" in entry:
+                phase_testing = phase.get("testing")
+                if not isinstance(phase_testing, dict) or phase_testing.get("status") != entry["testing_status"]:
+                    errors.append(f"phase-{phase_id:02d}.testing.status does not match master.testing_status")
 
     _validate_master_state(master, errors)
     return errors, stats

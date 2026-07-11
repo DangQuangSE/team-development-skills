@@ -143,8 +143,10 @@ Dependencies may reference unique earlier phase IDs only. A step object appears 
 Mandatory validation must use the master path so the bundle validator checks the manifest and every referenced sibling:
 
 ```text
-python skills/ck-plan-json/hooks/plan_validator.py plans/{slug}/plan.json
+python {ck-plan-json-skill-root}/hooks/plan_validator.py plans/{slug}/plan.json
 ```
+
+Resolve `{ck-plan-json-skill-root}` from the `SKILL.md` currently loaded so the command works in pack-root, Claude, Codex, and Antigravity installations.
 
 If validation fails, fix the relevant phase or master file and rerun validation. Do not report success until the validator exits with code `0`.
 

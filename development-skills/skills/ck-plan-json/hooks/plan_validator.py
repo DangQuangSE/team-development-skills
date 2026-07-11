@@ -202,8 +202,8 @@ def validate_phase(data: Any, prefix: str = "phase") -> list[str]:
         if cursor != count + 1 or any(item != "completed" for item in statuses):
             errors.append(f"{prefix} completed state requires current_step = step_count + 1 and all steps completed")
         quality = data.get("quality")
-        if isinstance(quality, dict) and quality.get("status") not in (None, "approved"):
-            errors.append(f"{prefix} completed state requires quality.status = approved when quality is present")
+        if not isinstance(quality, dict) or quality.get("status") != "approved":
+            errors.append(f"{prefix} completed state requires quality.status = approved")
     elif status == "blocked":
         if not 1 <= cursor <= count:
             errors.append(f"{prefix}.current_step is out of range for blocked state")
@@ -319,6 +319,8 @@ def validate_bundle(master_path: str | Path, master_override: Any | None = None)
             error = _enum_error(entry["testing_status"], TESTING_STATUSES, f"{prefix}.testing_status")
             if error:
                 errors.append(error)
+        if entry.get("status") == "completed" and entry.get("quality_status") != "approved":
+            errors.append(f"{prefix} completed state requires quality_status = approved")
 
         dependencies = entry["depends_on"]
         if not isinstance(dependencies, list):

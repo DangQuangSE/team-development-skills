@@ -127,7 +127,9 @@ def issue_receipt(report_path: str | Path, repo_root: str | Path | None = None) 
 
 
 def verify_receipt(
-    receipt_path: str | Path, repo_root: str | Path | None = None
+    receipt_path: str | Path,
+    repo_root: str | Path | None = None,
+    expected_target: str | None = None,
 ) -> tuple[bool, list[str]]:
     root = Path(repo_root).resolve() if repo_root else _default_root()
     try:
@@ -145,6 +147,19 @@ def verify_receipt(
         return False, ["receipt must be a JSON object"]
 
     errors: list[str] = []
+    receipt_target = receipt.get("target")
+    if not isinstance(receipt_target, str) or not receipt_target:
+        errors.append("receipt.target is missing or malformed")
+    else:
+        expected_name = f"{receipt_target}-receipt.json"
+        if resolved_receipt.name != expected_name:
+            errors.append(
+                f"receipt filename {resolved_receipt.name!r} does not match target {receipt_target!r}"
+            )
+        if expected_target is not None and receipt_target != expected_target:
+            errors.append(
+                f"receipt target {receipt_target!r} does not match expected phase {expected_target!r}"
+            )
     if receipt.get("verdict") != "APPROVED":
         errors.append(f"receipt verdict is {receipt.get('verdict')!r}, not APPROVED")
     if receipt.get("policy_version") != POLICY_VERSION:
@@ -177,6 +192,14 @@ def verify_receipt(
         if not resolved.is_file():
             errors.append(f"reviewed file no longer exists: {rel}")
     if errors:
+        return False, errors
+
+    try:
+        report = json.loads(report_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        return False, [f"reviewed report is not valid JSON: {exc}"]
+    if not isinstance(report, dict) or report.get("target") != receipt_target:
+        errors.append("reviewed report target does not match receipt.target")
         return False, errors
 
     try:

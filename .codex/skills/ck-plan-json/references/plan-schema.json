@@ -19,7 +19,9 @@
       "description": "Initialize project structure and dependencies",
       "file": "phase-01-setup-project.json",
       "status": "pending",
-      "depends_on": []
+      "depends_on": [],
+      "quality_status": "not_evaluated",
+      "testing_status": "not_started"
     }
   ]
 }

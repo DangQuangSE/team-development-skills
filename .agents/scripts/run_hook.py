@@ -39,10 +39,11 @@ def main():
             sys.exit(1)
 
     resolve_env()
+    payload = sys.stdin.read()
 
     result = subprocess.run(
         [sys.executable, hook_path] + hook_args,
-        capture_output=True, text=True, timeout=30
+        input=payload, capture_output=True, text=True, timeout=30
     )
 
     stdout = result.stdout.strip()

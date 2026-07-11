@@ -37,7 +37,7 @@ For `--gate`, also read the phase file's own Design Constraints / Quality Accept
 
 ## Step 3 — Evaluate
 
-Spawn **`quality-reviewer`** with: the resolved target files, detected conventions, the loaded contract sections, and (gate mode) the phase's own constraints.
+If a named **`quality-reviewer`** agent is available, spawn it with the resolved target files, detected conventions, loaded contract sections, and (gate mode) the phase constraints. Otherwise perform this evaluation inline using the same inputs and report schema. The inline path is required for Codex, Antigravity, and standalone installations that copy only the skill directory; it must not weaken severity or evidence requirements.
 
 A candidate issue becomes a finding only when:
 
@@ -68,8 +68,10 @@ Produce a report matching `references/report-schema.json`. `--gate` and `--verif
 If the verdict is `APPROVED` **and** the mode is `--gate` or `--verify`, issue the receipt immediately after writing the report:
 
 ```
-python skills/ck-quality/scripts/receipt.py issue plans/{slug}/quality/{target}-quality-report.json
+python {ck-quality-skill-root}/scripts/receipt.py issue plans/{slug}/quality/{target}-quality-report.json
 ```
+
+Resolve `{ck-quality-skill-root}` from the `SKILL.md` currently loaded (for example `skills/ck-quality`, `.claude/skills/ck-quality`, `.codex/skills/ck-quality`, or `.agents/skills/ck-quality`). Never assume one client-specific install path.
 
 This writes `plans/{slug}/quality/{target}-receipt.json`, which `hooks/quality_receipt_gate.py` checks before allowing the phase's completion transition. `--audit`/`--diff`/`--changed` never issue a receipt, even with `--save` — they have no phase target for a hook to gate.
 

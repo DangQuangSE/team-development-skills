@@ -13,6 +13,8 @@ A collection of development-focused Claude Code skills — code review, problem-
 | `ck:fix` | `/ck:fix` | Fix bugs using structured diagnosis |
 | `ck:plan` | `/ck:plan` | Plan features before implementation (markdown) |
 | `ck:plan-json` | `/ck:plan-json` | Create phased JSON plan bundles (compact master + per-phase files) |
+| `ck:quality` | `/ck:quality` | Audit architecture and maintainability, or enforce a phase quality gate |
+| `ck:test` | `/ck:test` | Write and run tests independently, including two-pass TDD |
 | `code-review` | `/code-review` | Structured code reviews with verification |
 | `mermaidjs-v11` | `/mermaidjs-v11` | Generate diagrams (flowcharts, ERD, sequence, etc.) |
 | `playwright-skill` | `/playwright-skill` | Browser automation and UI testing |
@@ -43,3 +45,5 @@ cp development-skills/settings.json <your-project>/settings.json
 ```bash
 cp -r development-skills/skills/* <your-project>/skills/
 ```
+
+The guided pipeline is `ck:plan → ck:test --tdd --prepare` (optional) `→ ck:cook → ck:quality → ck:test → code-review`. `ck:cook` never owns tests, and phase completion requires a fresh `ck:quality` receipt.

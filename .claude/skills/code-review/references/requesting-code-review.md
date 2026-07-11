@@ -29,7 +29,7 @@ Catch issues before they cascade. Review early, review often.
 ```
 
 **Automatic (via pipeline):**
-- `/cook` and `/fix` spawn the `code-reviewer` agent automatically after each phase.
+- `ck:cook` and `ck:fix` do not replace final review. For planned work, request review after the quality receipt is current and `ck:test` has produced a fresh report.
 - No manual invocation needed when using those pipelines.
 
 ## Act on Feedback
