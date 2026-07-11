@@ -1,0 +1,6 @@
+# Python runtime artifacts
+__pycache__/
+*.py[cod]
+
+# AI client session state is recreated at runtime
+**/.claude/session-data/
