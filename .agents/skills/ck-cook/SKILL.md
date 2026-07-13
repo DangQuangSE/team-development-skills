@@ -1,24 +1,37 @@
 ---
 name: ck:cook
-description: Implement a feature phase by phase from a phased JSON master or Markdown plan. Cook only writes code — it never writes or runs tests. Every phase goes through a mandatory quality gate (ck:quality) before it can be marked completed. Supports resumable state and TDD handoff to ck:test.
+description: Implement a feature phase by phase from a phased JSON master or Markdown plan. Before each phase, confirm whether to create/run unit tests and whether to run ck:quality, unless explicit flags supply those choices. Supports token-budgeted execution, resumable state, and TDD handoff to ck:test.
 user-invocable: true
 ---
 
-# ck:cook — Implementation-Only Pipeline with a Mandatory Quality Gate
+# ck:cook — Budget-Aware Implementation Pipeline
 
-Cook's job ends at implementation, a compile/syntax check, and quality approval. It does not write or run tests (`ck:test` owns that) and does not re-score maintainability at the end (`ck:quality` already did, per phase).
+Cook implements code and performs a compile/syntax check. `ck:test` owns tests and `ck:quality` owns quality review; Cook orchestrates either only after user consent.
 
 Modes are mutually exclusive; Standard is the default:
 
-- **Standard** — quality gate is mandatory; auto-continue to the next phase once a phase is `APPROVED`.
-- **`--fast`** — minimal status ceremony; the quality gate still runs and still blocks — there is no flag that skips it.
-- **`--hard`** — same gate, plus mandatory human confirmation after each phase reaches `APPROVED` and again before the final push.
+- **Standard** — ask for the phase's test and quality choices, then auto-continue after the selected checks finish.
+- **`--fast`** — default the current phase to no unit tests and no quality gate unless explicit check flags are supplied.
+- **`--hard`** — default both checks to yes and require human confirmation after the selected checks and before the final push.
 
 Composable flag:
 
-- **`--tdd`** — before implementing a phase, require a `RED_READY` test artifact prepared by `/ck:test --tdd --prepare`.
+- **`--tdd`** — select tests=yes and require a `RED_READY` artifact before implementation.
+- **`--tests` / `--no-tests`** — select whether `ck:test --unit` creates/runs unit tests for the current phase.
+- **`--quality` / `--no-quality`** — select whether `ck:quality --gate` runs for the current phase.
+- **`--checks-all-phases`** — apply explicitly supplied test/quality choices to every remaining phase; without it, ask again at the next phase.
 
-`--no-test` is removed — Cook never owned tests, so there is nothing to opt out of. No old single-file JSON or mixed-format compatibility is supported. Markdown `plan.md` remains a separate input format.
+Reject contradictory flag pairs. No old single-file JSON or mixed-format compatibility is supported. Markdown `plan.md` remains a separate input format.
+
+### Step 0.5 — Phase Checkpoint
+
+Before reading implementation files or activating each phase, resolve two independent choices: `Unit tests: yes/no` and `Quality gate: yes/no`.
+
+- Honor explicit flags without asking. In Standard mode, ask one concise question containing both choices that remain unresolved. Do not silently infer consent from a previous phase unless `--checks-all-phases` was supplied.
+- In `--fast`, unresolved choices default to no. In `--hard`, unresolved choices default to yes.
+- State the token/risk tradeoff briefly: tests catch behavioral regressions; quality checks architecture and maintainability; skipping either saves tokens but reduces assurance.
+- Record the decision before activation/completion in a separate phase-state write. For JSON, a skipped gate requires `quality.status: skipped_by_user` and `quality.decision: user_confirmed_skip`; it is never `approved`. Later complete the phase and master in separate phase-first/master-second writes so receipt hooks validate persisted consent. For Markdown, append `[quality: skipped_by_user; decision: user_confirmed_skip]` to that phase's checkbox line. A skipped test run remains `not_started` with a note that the user declined it.
+- If tests=yes without `--tdd`, run `/ck:test --unit <phase-file>` after implementation and the Build Gate. If `--tdd`, use the RED/GREEN handoff described below.
 
 ---
 
@@ -126,7 +139,7 @@ For each `phase-XX-*.md` in order:
 2. In `--tdd`, confirm the `RED_READY` artifact from Step 1 before implementing.
 3. Implement and verify the phase's Success Criteria.
 4. Record spec coverage when `spec.md` exists.
-5. Run the Build Gate (Step 4) and Quality Gate (Step 5) before updating `plan.md` progress or Session Notes for this phase.
+5. Run the Build Gate, then the checks selected at Step 0.5, before updating `plan.md` progress or Session Notes.
 
 ---
 
@@ -140,7 +153,13 @@ Compilation or syntax validation only — Cook does not run unit or integration 
 
 ---
 
-### Step 5 — Quality Gate (mandatory, never skipped)
+### Step 5 — Selected Test and Quality Checks
+
+If unit tests=yes, invoke `ck:test --unit <phase-file>` after the Build Gate. Fix production-code failures within the phase remediation limit; let `ck:test` own test files and reports. In TDD mode, invoke `ck:test --tdd --verify` instead. A `failed` or blocked test result blocks phase completion; after three distinct remediation cycles, escalate rather than silently converting the choice to skipped.
+
+If quality=no, write `quality.status: skipped_by_user`, `quality.decision: user_confirmed_skip`, and mirror `quality_status: skipped_by_user`; leave report and receipt empty. Continue the completion transition, but label the phase as completed without quality approval. This records consent for validation and audit but is not cryptographic proof of user identity.
+
+If quality=yes, run this gate:
 
 Treat `ck:quality` as a black box: invoke it, act on its verdict, never second-guess or reimplement its severity rules here (those live in `ck:quality`'s own contract and may change independently of Cook).
 
@@ -148,22 +167,22 @@ Treat `ck:quality` as a black box: invoke it, act on its verdict, never second-g
 2. **`CHANGES_REQUIRED`** — fix every finding it lists as blocking, at the location it cites, then rerun the gate (`--verify` against the same report is acceptable once every listed finding has been addressed). Up to 3 remediation cycles; a 4th `CHANGES_REQUIRED` escalates to the human with the outstanding findings and attempted fixes.
 3. **`APPROVED`** — `ck:quality` has already issued the receipt. Write the phase file's `quality` object (`status: approved`, `report`, `receipt`) and the master's `quality_status: approved` mirror, then perform the completion transition: phase file first (`status: completed`, `current_step = step_count + 1`), master second (mirrors completion, advances `current_phase`). The receipt-gate hook enforces that this transition cannot happen without the fresh receipt just issued.
 
-`--hard` additionally pauses here for explicit human confirmation before the completion transition, even though the verdict is already `APPROVED`. Standard and `--fast` continue automatically — a passing quality gate is proof enough; there is no separate numeric review score to check.
+`--hard` additionally pauses here for explicit human confirmation before the completion transition. Other modes continue after the selected checks finish.
 
 If another phase remains, the master stays `in_progress` and points to the pending next phase — return to Step 1 (Preflight) for it. If the final phase completes, set plan `status = completed` and `current_phase = phase_count + 1`, and proceed to Step 6.
 
 ---
 
-### Step 6 — Approved Handoff (Finalize)
+### Step 6 — Checked Handoff (Finalize)
 
-Runs once, after the final phase reaches `APPROVED` and its completion transition succeeds.
+Runs once, after the final phase finishes its selected checks and its completion transition succeeds.
 
-- For JSON, verify every phase and step is already completed with `quality_status: approved`, verify both `count + 1` sentinels, then run strict bundle validation. Never synthesize completion for unexecuted or unapproved work.
-- For Markdown, mark only verified, quality-approved phases complete and update plan status and Session Notes.
-- Cook has not run or verified tests. Print explicitly:
+- For JSON, verify every phase and step is completed with `quality_status: approved` or `skipped_by_user`, verify both `count + 1` sentinels, then run strict bundle validation.
+- For Markdown, mark implemented phases complete and record whether quality was approved or skipped.
+- Report the actual test choice and outcome. When tests were skipped, print explicitly:
 
 ```text
-Testing: not run by Cook. Run /ck:test or your project's test suite before code review or release.
+Testing: skipped by user. Run /ck:test or your project's test suite before code review or release.
 ```
 
 - Update user-facing documentation only when the implementation changed its contract (`docs-manager`; skip for `--fast`).
@@ -174,10 +193,11 @@ Final summary:
 
 ```text
 Plan: {plan_id}
-Result: {completed_phases}/{phase_count} phases, {completed_steps}/{step_count} steps — all quality-approved
+Result: {completed_phases}/{phase_count} phases, {completed_steps}/{step_count} steps
+Quality: {approved_count} approved, {quality_skipped_count} skipped by user
 Blocked: {blocked_count}
 Debug cycles: {debug_log_count}
-Testing: not run by Cook — run /ck:test or the project test suite next
+Testing: {passed_count} passed, {testing_skipped_count} skipped by user
 ```
 
 ## Agents / Skills
@@ -185,7 +205,8 @@ Testing: not run by Cook — run /ck:test or the project test suite next
 | Agent / Skill  | Step | Modes |
 |----------------|------|-------|
 | `debugger`     | 4    | Build Gate remediation |
-| `ck:quality`   | 5    | Standard, `--fast`, `--hard` — always runs, never skipped |
+| `ck:test`      | 5    | When tests=yes |
+| `ck:quality`   | 5    | When quality=yes |
 | `project-manager` | 6 | Markdown plans |
 | `docs-manager` | 6    | Standard, `--hard` (skipped by `--fast`) |
 | `git-manager`  | 6    | All modes |

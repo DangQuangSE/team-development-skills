@@ -14,7 +14,7 @@ from typing import Any
 PLAN_STATUSES = {"pending", "in_progress", "completed", "blocked"}
 PHASE_STATUSES = PLAN_STATUSES
 STEP_STATUSES = {"pending", "in_progress", "completed", "failed", "blocked"}
-QUALITY_STATUSES = {"not_evaluated", "changes_required", "approved"}
+QUALITY_STATUSES = {"not_evaluated", "changes_required", "approved", "skipped_by_user"}
 TESTING_STATUSES = {"not_started", "blocked_on_quality", "in_progress", "passed", "failed"}
 PHASE_FILE_RE = re.compile(r"^phase-(\d{2})-([a-z0-9]+(?:-[a-z0-9]+)*)\.json$")
 KEBAB_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
@@ -52,6 +52,8 @@ def _validate_quality_state(data: dict[str, Any], prefix: str) -> list[str]:
             for field in ("report", "receipt"):
                 if field in quality and not isinstance(quality[field], str):
                     errors.append(f"{prefix}.quality.{field} must be a string")
+            if quality.get("status") == "skipped_by_user" and quality.get("decision") != "user_confirmed_skip":
+                errors.append(f"{prefix}.quality.decision must be user_confirmed_skip when quality is skipped")
             if "remediation_cycles" in quality and (
                 not _is_int(quality["remediation_cycles"]) or quality["remediation_cycles"] < 0
             ):
@@ -202,8 +204,8 @@ def validate_phase(data: Any, prefix: str = "phase") -> list[str]:
         if cursor != count + 1 or any(item != "completed" for item in statuses):
             errors.append(f"{prefix} completed state requires current_step = step_count + 1 and all steps completed")
         quality = data.get("quality")
-        if not isinstance(quality, dict) or quality.get("status") != "approved":
-            errors.append(f"{prefix} completed state requires quality.status = approved")
+        if not isinstance(quality, dict) or quality.get("status") not in {"approved", "skipped_by_user"}:
+            errors.append(f"{prefix} completed state requires quality.status = approved or skipped_by_user")
     elif status == "blocked":
         if not 1 <= cursor <= count:
             errors.append(f"{prefix}.current_step is out of range for blocked state")
@@ -319,8 +321,8 @@ def validate_bundle(master_path: str | Path, master_override: Any | None = None)
             error = _enum_error(entry["testing_status"], TESTING_STATUSES, f"{prefix}.testing_status")
             if error:
                 errors.append(error)
-        if entry.get("status") == "completed" and entry.get("quality_status") != "approved":
-            errors.append(f"{prefix} completed state requires quality_status = approved")
+        if entry.get("status") == "completed" and entry.get("quality_status") not in {"approved", "skipped_by_user"}:
+            errors.append(f"{prefix} completed state requires quality_status = approved or skipped_by_user")
 
         dependencies = entry["depends_on"]
         if not isinstance(dependencies, list):

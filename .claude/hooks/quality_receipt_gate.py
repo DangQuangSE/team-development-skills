@@ -94,10 +94,14 @@ def _required_receipts_for_json_phase(root: Path, path: Path, existing: str | No
         except json.JSONDecodeError:
             old_status = None
     try:
-        new_status = json.loads(proposed).get("status")
+        new_data = json.loads(proposed)
+        new_status = new_data.get("status")
     except json.JSONDecodeError:
         return []
     if old_status == "completed" or new_status != "completed":
+        return []
+    quality = new_data.get("quality")
+    if isinstance(quality, dict) and quality.get("status") == "skipped_by_user" and quality.get("decision") == "user_confirmed_skip":
         return []
     quality_dir, target = _receipt_dir_and_target_for(root, path)
     return [(target, quality_dir / f"{target}-receipt.json")]
@@ -133,6 +137,15 @@ def _required_receipts_for_master(root: Path, path: Path, existing: str | None, 
             continue
         if old_status_by_id.get(phase_id) == "completed":
             continue
+        if entry.get("quality_status") == "skipped_by_user":
+            phase_file = entry.get("file")
+            try:
+                phase_data = json.loads((path.parent / phase_file).read_text(encoding="utf-8")) if isinstance(phase_file, str) else None
+            except (OSError, json.JSONDecodeError):
+                phase_data = None
+            quality = phase_data.get("quality") if isinstance(phase_data, dict) else None
+            if isinstance(quality, dict) and quality.get("status") == "skipped_by_user" and quality.get("decision") == "user_confirmed_skip":
+                continue
         target = f"phase-{phase_id:02d}-{name}"
         required.append((target, quality_dir / f"{target}-receipt.json"))
     return required
@@ -152,6 +165,9 @@ def _required_receipts_for_plan_md(root: Path, path: Path, existing: str | None,
     quality_dir = path.parent / "quality"
     required = []
     for num in sorted(newly_checked):
+        phase_line = re.search(rf"^- \[[xX]\]\s*Phase\s+{num}\b.*$", proposed, re.MULTILINE)
+        if phase_line and "quality: skipped_by_user; decision: user_confirmed_skip" in phase_line.group(0).lower():
+            continue
         matches = sorted(path.parent.glob(f"phase-{num:02d}-*.md"))
         if not matches:
             # No phase file to resolve a target from; still require a receipt

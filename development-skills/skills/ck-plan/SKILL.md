@@ -1,6 +1,6 @@
 ---
 name: ck:plan
-description: Plan a feature or system before implementation. Use when the user says "plan this", "I want to build X", "how do I implement Y", or when /ck:brainstorm produces a spec.md. Always run before /ck:cook. Modes (pick one): --fast (simple, single-file), --hard (research + red-team + validate). Composable flag (combine with any mode): --tdd — propagates into the cook pipeline. Every phase gets Design Constraints and Quality/Testing State — `ck:cook`'s quality gate is mandatory and cannot be opted out of.
+description: Plan a feature or system before implementation. Use when the user says "plan this", "I want to build X", "how do I implement Y", or when /ck:brainstorm produces a spec.md. Always run before /ck:cook. Modes (pick one): --fast (simple, single-file), --hard (research + red-team + validate). Composable flag (combine with any mode): --tdd — propagates into the cook pipeline. Every phase gets Design Constraints and Quality/Testing State; ck:cook confirms optional test and quality checks per phase.
 user-invocable: true
 ---
 
@@ -65,7 +65,7 @@ Spawn **2 `researcher` agents in parallel**:
 
 Spawn the **`planner` agent** with: feature description + mode + research reports + test flag + spec file path (if any).
 
-- Every phase gets a `## Design Constraints` section and a `## Quality and Testing State` section (quality: not evaluated, testing: not started) — `ck:cook`'s preflight and `ck:quality --gate` read these; they are never omitted, even in Fast mode.
+- Every phase gets a `## Design Constraints` section and a `## Quality and Testing State` section (quality: not evaluated, testing: not started) so `ck:cook` can record the user's per-phase check choices and their outcomes.
 - **`--tdd`**: planner adds `### Tests to Write First` to each phase, derived from spec acceptance criteria
 - **Spec provided**: planner maps each phase to the P1/P2/P3 stories it covers
 

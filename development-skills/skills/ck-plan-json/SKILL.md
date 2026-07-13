@@ -63,7 +63,7 @@ Each phase file uses this structure:
   "status": "pending",
   "current_step": 1,
   "design_constraints": [
-    "Fast mode may reduce ceremony but never skips the quality gate"
+    "Cook confirms unit-test and quality-gate choices before each phase"
   ],
   "quality_profile": {
     "repository_conventions": {},

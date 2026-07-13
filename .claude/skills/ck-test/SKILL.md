@@ -22,7 +22,7 @@ Modes (pick exactly one; `--tdd` further requires `--prepare` or `--verify`):
 
 ### Step 1 — Quality Gate Check
 
-Skip only for `--tdd --prepare` — it runs before `ck:cook` writes any code, so there is nothing to gate yet.
+Skip only for `--tdd --prepare`, or for `--unit`/`--tdd --verify` explicitly orchestrated by the active `ck:cook` phase after its Phase Checkpoint recorded tests=yes. This scoped exception lets tests and quality remain independent user choices; it does not apply to standalone test requests.
 
 For every other mode, resolve the phase(s) in scope and verify each has a valid, current quality receipt:
 
