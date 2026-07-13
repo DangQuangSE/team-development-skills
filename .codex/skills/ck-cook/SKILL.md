@@ -188,6 +188,7 @@ Testing: skipped by user. Run /ck:test or your project's test suite before code 
 - Update user-facing documentation only when the implementation changed its contract (`docs-manager`; skip for `--fast`).
 - Sync Markdown plan progress (`project-manager`; Markdown plans only).
 - Prepare conventional commit details and ask before pushing (`git-manager`, always) — the commit message must not claim tests pass, since Cook did not run them.
+- If the completed work changes a service in a Docker Compose microservice system, identify the exact Compose service name from the repository and include a copy-ready command that affects only that service. Use `docker compose restart <service>` when the existing image/container is sufficient; use `docker compose up -d --no-deps --build <service>` when code or image contents must be rebuilt. Include `-f <compose-file>` and `--profile <profile>` when the repository requires them. Never guess the service name, never suggest restarting the entire stack, and present the command as a user-run suggestion rather than executing it automatically.
 
 Final summary:
 
