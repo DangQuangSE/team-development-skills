@@ -1,8 +1,14 @@
 # team-development-skills
 
-Bộ AI skill packages cho Claude Code, hỗ trợ phân tích yêu cầu phần mềm và mô phỏng quy trình phát triển theo team.
+Bộ AI skill packages cho Claude Code, Codex, Cursor và các agent tương thích, hỗ trợ phân tích yêu cầu phần mềm và mô phỏng quy trình phát triển theo team.
 
-*A collection of AI skill packages for Claude Code — software requirements analysis and full-team development simulation.*
+*A collection of AI skill packages for Claude Code, Codex, Cursor, and compatible agents — software requirements analysis and full-team development simulation.*
+
+## Cursor
+
+Cursor tự động khám phá 34 skill trong `.cursor/skills/`. Các workflow thường dùng có thể gọi từ Agent chat qua `/plan`, `/cook`, `/fix`, `/test`, `/quality`, `/review`, và `/srs`; project rules nằm trong `.cursor/rules/`.
+
+*Cursor automatically discovers 34 skills from `.cursor/skills/`. Common workflows are available in Agent chat through `/plan`, `/cook`, `/fix`, `/test`, `/quality`, `/review`, and `/srs`; project rules live in `.cursor/rules/`.*
 
 ---
 

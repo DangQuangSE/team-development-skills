@@ -1,0 +1,12 @@
+---
+description: Route development requests to the repository's reusable Cursor skills and commands.
+globs:
+alwaysApply: true
+---
+
+# Cursor Workflow
+
+- Use a relevant skill from `.cursor/skills/` whenever its description matches the request.
+- Invoke skills automatically when relevant; users may also invoke them through the slash menu.
+- Use `/plan` for structured implementation planning, `/cook` for plan execution, `/test` for verification, `/quality` for maintainability audits, `/review` for final review, `/fix` for bugs, and `/srs` for the full SRS pipeline.
+- Treat rules as persistent policy, commands as explicit workflow entry points, and skills as dynamically loaded procedural knowledge.

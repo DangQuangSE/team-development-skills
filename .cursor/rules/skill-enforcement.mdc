@@ -1,0 +1,15 @@
+---
+description: Enforce skill discovery, phased plan compliance, quality gates, and artifact handover for this repository.
+globs:
+alwaysApply: true
+---
+
+# Skill Enforcement
+
+- Discover skills under `.cursor/skills/<name>/SKILL.md`.
+- When a skill is selected, read its complete `SKILL.md` before acting.
+- Load referenced files only when the selected skill directs you to them.
+- Preserve the order and status of steps in `plans/<slug>/plan.json` when a cook workflow is active.
+- Do not claim implementation is complete until the required build, test, and review gates for the selected workflow have passed.
+- Write handover artifacts to the project directory and reread the latest artifact instead of relying on chat history.
+- Ask for direction after three failed remediation cycles on the same plan step.

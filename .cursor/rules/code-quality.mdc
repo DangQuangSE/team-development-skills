@@ -1,0 +1,15 @@
+---
+description: Apply repository-wide engineering quality and safety expectations to code changes.
+globs:
+alwaysApply: true
+---
+
+# Code Quality
+
+- Inspect surrounding code and repository conventions before editing.
+- Keep changes scoped to the request and preserve unrelated user changes.
+- Never hardcode credentials, tokens, private keys, or environment-specific secrets.
+- Validate inputs at trust boundaries and handle failure paths explicitly.
+- Prefer simple, maintainable designs with clear ownership over speculative abstractions.
+- Run the narrowest relevant build, lint, typecheck, and tests after changes.
+- Use the `code-review` skill before declaring changed code complete.
