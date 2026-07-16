@@ -1,8 +1,29 @@
-# team-development-skills
+# MySkills — AI Skill Packs / Bộ AI Skill
 
 Bộ AI skill packages cho Claude Code, Codex, Cursor và các agent tương thích, hỗ trợ phân tích yêu cầu phần mềm và mô phỏng quy trình phát triển theo team.
 
 *A collection of AI skill packages for Claude Code, Codex, Cursor, and compatible agents — software requirements analysis and full-team development simulation.*
+
+## Tổng quan / Overview
+
+Repository gồm **40 skill có tài liệu riêng**, được tổ chức thành ba bộ có thể dùng độc lập hoặc nối thành một workflow hoàn chỉnh.
+
+The repository contains **40 individually documented skills**, organized into three packs that can run independently or as one end-to-end workflow.
+
+| Bộ skill / Pack | Phù hợp khi / Best for | Tài liệu / Docs |
+|---|---|---|
+| Development Skills | Lập kế hoạch, triển khai, sửa lỗi, test, quality và review / Planning, implementation, debugging, testing, quality, and review | [Mở bộ skill / Open pack](./development-skills/README.md) |
+| SRS Skills | Biến ý tưởng hoặc requirements thô thành SRS được validation / Turning ideas or raw requirements into a validated SRS | [VI](./srs-skills/README.md) · [EN](./srs-skills/README.en.md) |
+| Virtual Team Skill | Chạy pipeline 7 vai trò từ BA đến QA/QC / Running a seven-role pipeline from BA to QA/QC | [VI](./virtual-team-skill/README.vi.md) · [EN](./virtual-team-skill/README.md) |
+
+### Luồng gợi ý / Recommended journey
+
+```text
+Ý tưởng / Idea
+  → SRS Skills (requirements)
+  → Virtual Team (BA → TechLead → PM → BE → FE → Tester → QA/QC)
+  → Development Skills (plan → cook → quality → test → review)
+```
 
 ## Cursor
 

@@ -1,6 +1,22 @@
 # Virtual Team Skill — Hướng dẫn tiếng Việt
 
+[Tiếng Việt](./README.vi.md) · [English](./README.md)
+
 Bộ công cụ AI mô phỏng một đội phát triển phần mềm hoàn chỉnh gồm 7 vai trò. Bạn chỉ cần nhập ý tưởng — hệ thống tự động tạo ra toàn bộ tài liệu từ phân tích yêu cầu đến ký duyệt phát hành.
+
+## Mục lục agent skill
+
+| Skill | Trách nhiệm |
+|---|---|
+| [team](./skills/team/) | Điều phối toàn bộ pipeline |
+| [team-ba](./skills/team-ba/) | Phân tích yêu cầu và nghiệp vụ |
+| [team-techlead](./skills/team-techlead/) | Kiến trúc và Design Freeze |
+| [team-pm](./skills/team-pm/) | Sprint plan và task breakdown |
+| [team-dev](./skills/team-dev/) | Triển khai backend |
+| [team-fe](./skills/team-fe/) | Triển khai frontend |
+| [team-test](./skills/team-test/) | Thiết kế test và UAT Readiness |
+| [team-qa](./skills/team-qa/) | Audit cuối và release sign-off |
+| [team-list](./skills/team-list/) | Trạng thái project và phase |
 
 ---
 

@@ -1,27 +1,33 @@
 # Development Skills
 
-A collection of development-focused Claude Code skills — code review, problem-solving, diagrams, sequential thinking, skill creation, and more. All skills are self-contained and work standalone or as part of any workflow.
+> **VI:** Bộ skill phát triển phần mềm từ brainstorm, plan và implementation đến quality, testing, review, browser automation và quản lý context.
+>
+> **EN:** A software-development skill pack spanning brainstorming, planning, implementation, quality, testing, review, browser automation, and context management.
+
+Mỗi skill hoạt động độc lập và có README song ngữ riêng. Bạn có thể kết hợp chúng thành pipeline hoặc chỉ cài đúng skill mình cần.
+
+Each skill is self-contained and has its own bilingual README. Use the full pipeline or install only what you need.
 
 ## Included Skills
 
 | Skill | Invoke | Use when |
 |-------|--------|----------|
-| `backend-mindset` | `/backend-mindset` | Building backend systems — APIs, auth, DB, security, scaling |
-| `caveman` | _(auto-triggered)_ | Terse output mode for context efficiency |
-| `ck:brainstorm` | `/ck:brainstorm` | Explore and debate before committing to code |
-| `ck:cook` | `/ck:cook` | Execute Markdown plans or phased JSON bundles |
-| `ck:fix` | `/ck:fix` | Fix bugs using structured diagnosis |
-| `ck:plan` | `/ck:plan` | Plan features before implementation (markdown) |
-| `ck:plan-json` | `/ck:plan-json` | Create phased JSON plan bundles (compact master + per-phase files) |
-| `ck:quality` | `/ck:quality` | Audit architecture and maintainability, or enforce a phase quality gate |
-| `ck:test` | `/ck:test` | Write and run tests independently, including two-pass TDD |
-| `code-review` | `/code-review` | Structured code reviews with verification |
-| `mermaidjs-v11` | `/mermaidjs-v11` | Generate diagrams (flowcharts, ERD, sequence, etc.) |
-| `playwright-skill` | `/playwright-skill` | Browser automation and UI testing |
-| `problem-solving` | `/problem-solving` | Six creative problem-solving techniques |
-| `sequential-thinking` | `/sequential-thinking` | Step-by-step reasoning for complex problems |
-| `skill-creator` | (meta-skill) | Create, edit, and optimize skills |
-| `strategic-compact` | `/strategic-compact` | Manage context window with timely compact suggestions |
+| [backend-mindset](./skills/backend-mindset/) | `/backend-mindset` | Production-ready backend design |
+| [caveman](./skills/caveman/) | _(auto-triggered)_ | Terse output for context efficiency |
+| [ck:brainstorm](./skills/ck-brainstorm/) | `/ck:brainstorm` | Explore before committing to code |
+| [ck:cook](./skills/ck-cook/) | `/ck:cook` | Execute Markdown or phased JSON plans |
+| [ck:fix](./skills/ck-fix/) | `/ck:fix` | Diagnose and fix bugs |
+| [ck:plan](./skills/ck-plan/) | `/ck:plan` | Create implementation plans |
+| [ck:plan-json](./skills/ck-plan-json/) | `/ck:plan-json` | Create resumable JSON plan bundles |
+| [ck:quality](./skills/ck-quality/) | `/ck:quality` | Audit architecture and maintainability |
+| [ck:test](./skills/ck-test/) | `/ck:test` | Testing and two-pass TDD |
+| [code-review](./skills/code-review/) | `/code-review` | Risk-driven code review |
+| [mermaidjs-v11](./skills/mermaidjs-v11/) | `/mermaidjs-v11` | Technical diagrams |
+| [playwright-skill](./skills/playwright-skill/) | `/playwright-skill` | Browser automation and UI testing |
+| [problem-solving](./skills/problem-solving/) | `/problem-solving` | Six breakthrough techniques |
+| [sequential-thinking](./skills/sequential-thinking/) | `/sequential-thinking` | Structured reasoning |
+| [skill-creator](./skills/skill-creator/) | _(meta-skill)_ | Create and improve skills |
+| [strategic-compact](./skills/strategic-compact/) | `/strategic-compact` | Context-window management |
 
 ## Commands / Danh sách lệnh
 

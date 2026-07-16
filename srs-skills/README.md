@@ -1,6 +1,22 @@
 # srs-skills
 
+[Tiếng Việt](./README.md) · [English](./README.en.md)
+
 AI skill package tạo **Software Requirements Specification (IEEE 830-1998)** từ ý tưởng đến tài liệu hoàn chỉnh.
+
+## Mục lục skill
+
+| Skill | Vai trò |
+|---|---|
+| [srs-workflow](./skills/srs-workflow/) | Điều phối toàn bộ pipeline từ ý tưởng đến handoff |
+| [srs-generator](./skills/srs-generator/) | Tạo nhanh SRS từ requirements có sẵn |
+| [sr-brainstorm](./skills/sr-brainstorm/) | Khai thác yêu cầu qua 5 vòng |
+| [sr-spec](./skills/sr-spec/) | Tổng hợp brainstorm thành spec |
+| [sr-plan](./skills/sr-plan/) | Lập blueprint cho từng section SRS |
+| [sr-generate](./skills/sr-generate/) | Sinh tài liệu IEEE 830 |
+| [sr-validate](./skills/sr-validate/) | Validate và tự sửa lỗi cấu trúc |
+| [sr-improve](./skills/sr-improve/) | Lập backlog cải tiến |
+| [sr-save](./skills/sr-save/) | Lưu context để tiếp tục ở session sau |
 
 ---
 

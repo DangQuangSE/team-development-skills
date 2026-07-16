@@ -1,8 +1,24 @@
 # srs-skills
 
+[Tiếng Việt](./README.md) · [English](./README.en.md)
+
 AI skill package that generates a complete **Software Requirements Specification (IEEE 830-1998)** from a raw idea to a fully structured, validated document.
 
 Works with Claude Code out of the box. Compatible with Gemini CLI, GitHub Copilot, and any LLM that can follow a markdown instruction file.
+
+## Skill index
+
+| Skill | Role |
+|---|---|
+| [srs-workflow](./skills/srs-workflow/) | Orchestrates the complete idea-to-handoff pipeline |
+| [srs-generator](./skills/srs-generator/) | Quickly generates an SRS from existing requirements |
+| [sr-brainstorm](./skills/sr-brainstorm/) | Elicits requirements in five rounds |
+| [sr-spec](./skills/sr-spec/) | Consolidates brainstorm results into a spec |
+| [sr-plan](./skills/sr-plan/) | Plans every SRS section |
+| [sr-generate](./skills/sr-generate/) | Generates the IEEE 830 document set |
+| [sr-validate](./skills/sr-validate/) | Validates structure and fixes errors |
+| [sr-improve](./skills/sr-improve/) | Builds an improvement backlog |
+| [sr-save](./skills/sr-save/) | Saves context for future sessions |
 
 ---
 

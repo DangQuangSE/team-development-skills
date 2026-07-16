@@ -1,6 +1,22 @@
 # Virtual Team Skill
 
+[Tiếng Việt](./README.vi.md) · [English](./README.md)
+
 A set of Claude Code skills that orchestrate 7 AI agents to simulate a full software development team — from requirements analysis to release sign-off. Every pipeline run is calibrated to a **project level** that controls architecture style, implementation depth, test coverage, and QA compliance standards.
+
+## Agent skill index
+
+| Skill | Responsibility |
+|---|---|
+| [team](./skills/team/) | Full-pipeline orchestrator |
+| [team-ba](./skills/team-ba/) | Requirements and business analysis |
+| [team-techlead](./skills/team-techlead/) | Architecture and Design Freeze |
+| [team-pm](./skills/team-pm/) | Sprint and task planning |
+| [team-dev](./skills/team-dev/) | Backend implementation |
+| [team-fe](./skills/team-fe/) | Frontend implementation |
+| [team-test](./skills/team-test/) | Test design and UAT Readiness |
+| [team-qa](./skills/team-qa/) | Final audit and release sign-off |
+| [team-list](./skills/team-list/) | Project and phase status |
 
 ## What it does
 
