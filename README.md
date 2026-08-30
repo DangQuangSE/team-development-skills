@@ -15,6 +15,7 @@ The repository contains **40 individually documented skills**, organized into th
 | Development Skills | Lập kế hoạch, triển khai, sửa lỗi, test, quality và review / Planning, implementation, debugging, testing, quality, and review | [Mở bộ skill / Open pack](./development-skills/README.md) |
 | SRS Skills | Biến ý tưởng hoặc requirements thô thành SRS được validation / Turning ideas or raw requirements into a validated SRS | [VI](./srs-skills/README.md) · [EN](./srs-skills/README.en.md) |
 | Virtual Team Skill | Chạy pipeline 7 vai trò từ BA đến QA/QC / Running a seven-role pipeline from BA to QA/QC | [VI](./virtual-team-skill/README.vi.md) · [EN](./virtual-team-skill/README.md) |
+| Game Asset Skills | Sinh prompt AI ren game asset đúng ngay 1-2 lần / Getting AI-generated game art right in 1-2 prompts | [Mở bộ skill / Open pack](./game-asset-skills/README.md) |
 
 ### Luồng gợi ý / Recommended journey
 

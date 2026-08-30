@@ -4,3 +4,4 @@ __pycache__/
 
 # AI client session state is recreated at runtime
 **/.claude/session-data/
+**/plans
