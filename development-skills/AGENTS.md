@@ -26,6 +26,7 @@ Open `development-skills/` in Claude Code. Skills appear in autocomplete.
 | `/problem-solving` | Creative problem-solving toolkit |
 | `/sequential-thinking` | Structured reasoning |
 | `/strategic-compact` | Context window management |
+| `/session-memory` | Load the nearest or a named prior Claude session |
 
 ## Copy to Another Project
 

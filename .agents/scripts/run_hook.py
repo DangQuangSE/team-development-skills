@@ -39,11 +39,13 @@ def main():
             sys.exit(1)
 
     resolve_env()
+    if hasattr(sys.stdin, "reconfigure"):
+        sys.stdin.reconfigure(encoding="utf-8")
     payload = sys.stdin.read()
 
     result = subprocess.run(
         [sys.executable, hook_path] + hook_args,
-        input=payload, capture_output=True, text=True, timeout=30
+        input=payload, capture_output=True, text=True, encoding="utf-8", timeout=30
     )
 
     stdout = result.stdout.strip()

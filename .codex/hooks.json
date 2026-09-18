@@ -9,6 +9,12 @@
             "command": "python .codex/hooks/session_start_context.py",
             "commandWindows": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File .codex/hooks/run_python.ps1 .codex/hooks/session_start_context.py",
             "timeout": 15
+          },
+          {
+            "type": "command",
+            "command": "python .codex/hooks/session_memory.py",
+            "commandWindows": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File .codex/hooks/run_python.ps1 .codex/hooks/session_memory.py",
+            "timeout": 15
           }
         ]
       }
@@ -22,6 +28,12 @@
             "command": "python .codex/hooks/pre_srs.py",
             "commandWindows": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File .codex/hooks/run_python.ps1 .codex/hooks/pre_srs.py",
             "timeout": 20
+          },
+          {
+            "type": "command",
+            "command": "python .codex/hooks/session_memory.py",
+            "commandWindows": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File .codex/hooks/run_python.ps1 .codex/hooks/session_memory.py",
+            "timeout": 15
           }
         ]
       }

@@ -16,6 +16,11 @@
             "type": "command",
             "command": "node .claude/hooks/run.js .claude/hooks/session_start_context.py",
             "timeout": 15
+          },
+          {
+            "type": "command",
+            "command": "node .claude/hooks/run.js .claude/hooks/session_memory.py",
+            "timeout": 15
           }
         ]
       }
@@ -38,6 +43,11 @@
             "type": "command",
             "command": "node .claude/hooks/run.js .claude/hooks/pre_srs.py",
             "timeout": 20
+          },
+          {
+            "type": "command",
+            "command": "node .claude/hooks/run.js .claude/hooks/session_memory.py",
+            "timeout": 15
           }
         ]
       }

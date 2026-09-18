@@ -26,6 +26,7 @@ Use this agent for all general-purpose development tasks. Always load the releva
 | problem-solving | `.agents/skills/problem-solving/` | Creative problem-solving |
 | sequential-thinking | `.agents/skills/sequential-thinking/` | Structured reasoning |
 | skill-creator | `.agents/skills/skill-creator/` | Create and modify skills |
+| session-memory | `.agents/skills/session-memory/` | Read nearest or named sessions across AI providers |
 | strategic-compact | `.agents/skills/strategic-compact/` | Context window management |
 | sr-brainstorm | `.agents/skills/sr-brainstorm/` | SRS brainstorm phase |
 | sr-generate | `.agents/skills/sr-generate/` | SRS generation phase |

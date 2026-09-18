@@ -15,6 +15,10 @@
           {
             "type": "command",
             "command": "python .agents/scripts/run_hook.py .claude/hooks/subagent_init.py"
+          },
+          {
+            "type": "command",
+            "command": "python .agents/scripts/run_hook.py .agents/scripts/session_memory.py"
           }
         ]
       }
@@ -30,6 +34,10 @@
           {
             "type": "command",
             "command": "python .agents/scripts/run_hook.py .claude/hooks/caveman_watch.py"
+          },
+          {
+            "type": "command",
+            "command": "python .agents/scripts/run_hook.py .agents/scripts/session_memory.py"
           }
         ]
       }
