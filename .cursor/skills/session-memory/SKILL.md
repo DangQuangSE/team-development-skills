@@ -6,6 +6,10 @@ compatibility: Requires Python 3.10+ and the provider hook manifest or CLI adapt
 
 # Session Memory
 
+## Runtime bundle
+
+The executable implementation is bundled under this skill's `hooks/` directory. Copy the complete skill directory when installing session memory; copying only `SKILL.md` installs the instructions but not the runtime hook. Provider entrypoints prefer this local bundle and accept `SESSION_MEMORY_HOOK` as an explicit override.
+
 Use the provider adapter to recover focused context from earlier work without pasting an entire transcript into the current context.
 
 ## Automatic startup behavior

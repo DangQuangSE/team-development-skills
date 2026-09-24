@@ -40,3 +40,7 @@ Individual skills can be copied separately:
 cp -r development-skills/skills/ck-plan <your-project>/skills/ck-plan
 cp -r development-skills/skills/ck-cook <your-project>/skills/ck-cook
 ```
+
+For `session-memory`, copy the complete skill directory, including its
+`hooks/` and `hooks/lib/` runtime files. The `SKILL.md` file alone is not an
+executable hook installation.

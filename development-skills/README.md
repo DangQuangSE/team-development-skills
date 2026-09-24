@@ -76,4 +76,9 @@ cp development-skills/settings.json <your-project>/settings.json
 cp -r development-skills/skills/* <your-project>/skills/
 ```
 
+`session-memory` includes executable files under its `hooks/` directory. Keep
+that directory when copying the skill; copying only `SKILL.md` installs the
+instructions but cannot activate the session hook. Provider entrypoints first
+look for the local skill bundle and then fall back to the pack-level hook.
+
 The guided pipeline is `ck:plan → ck:test --tdd --prepare` (optional) `→ ck:cook → ck:quality → ck:test → code-review`. `ck:cook` never owns tests, and phase completion requires a fresh `ck:quality` receipt.
