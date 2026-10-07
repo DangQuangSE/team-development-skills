@@ -7,13 +7,13 @@
           {
             "type": "command",
             "command": "python .codex/hooks/session_start_context.py",
-            "commandWindows": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File .codex/hooks/run_python.ps1 .codex/hooks/session_start_context.py",
+            "commandWindows": "powershell.exe -NoProfile -ExecutionPolicy Bypass -Command \"& (Join-Path ((git rev-parse --show-toplevel).Trim()) '.codex/hooks/run_from_git_root.ps1') 'session_start_context.py'; exit $LASTEXITCODE\"",
             "timeout": 15
           },
           {
             "type": "command",
             "command": "python .codex/hooks/session_memory.py",
-            "commandWindows": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File .codex/hooks/run_python.ps1 .codex/hooks/session_memory.py",
+            "commandWindows": "powershell.exe -NoProfile -ExecutionPolicy Bypass -Command \"& (Join-Path ((git rev-parse --show-toplevel).Trim()) '.codex/hooks/run_from_git_root.ps1') 'session_memory.py'; exit $LASTEXITCODE\"",
             "timeout": 15
           }
         ]
@@ -26,13 +26,13 @@
           {
             "type": "command",
             "command": "python .codex/hooks/pre_srs.py",
-            "commandWindows": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File .codex/hooks/run_python.ps1 .codex/hooks/pre_srs.py",
+            "commandWindows": "powershell.exe -NoProfile -ExecutionPolicy Bypass -Command \"& (Join-Path ((git rev-parse --show-toplevel).Trim()) '.codex/hooks/run_from_git_root.ps1') 'pre_srs.py'; exit $LASTEXITCODE\"",
             "timeout": 20
           },
           {
             "type": "command",
             "command": "python .codex/hooks/session_memory.py",
-            "commandWindows": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File .codex/hooks/run_python.ps1 .codex/hooks/session_memory.py",
+            "commandWindows": "powershell.exe -NoProfile -ExecutionPolicy Bypass -Command \"& (Join-Path ((git rev-parse --show-toplevel).Trim()) '.codex/hooks/run_from_git_root.ps1') 'session_memory.py'; exit $LASTEXITCODE\"",
             "timeout": 15
           }
         ]
@@ -45,25 +45,25 @@
           {
             "type": "command",
             "command": "python .codex/hooks/level_gate.py",
-            "commandWindows": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File .codex/hooks/run_python.ps1 .codex/hooks/level_gate.py",
+            "commandWindows": "powershell.exe -NoProfile -ExecutionPolicy Bypass -Command \"& (Join-Path ((git rev-parse --show-toplevel).Trim()) '.codex/hooks/run_from_git_root.ps1') 'level_gate.py'; exit $LASTEXITCODE\"",
             "timeout": 10
           },
           {
             "type": "command",
             "command": "python .codex/hooks/pre_write_validator.py",
-            "commandWindows": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File .codex/hooks/run_python.ps1 .codex/hooks/pre_write_validator.py",
+            "commandWindows": "powershell.exe -NoProfile -ExecutionPolicy Bypass -Command \"& (Join-Path ((git rev-parse --show-toplevel).Trim()) '.codex/hooks/run_from_git_root.ps1') 'pre_write_validator.py'; exit $LASTEXITCODE\"",
             "timeout": 15
           },
           {
             "type": "command",
             "command": "python .codex/hooks/plan_validator.py",
-            "commandWindows": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File .codex/hooks/run_python.ps1 .codex/hooks/plan_validator.py",
+            "commandWindows": "powershell.exe -NoProfile -ExecutionPolicy Bypass -Command \"& (Join-Path ((git rev-parse --show-toplevel).Trim()) '.codex/hooks/run_from_git_root.ps1') 'plan_validator.py'; exit $LASTEXITCODE\"",
             "timeout": 10
           },
           {
             "type": "command",
             "command": "python .codex/hooks/quality_receipt_gate.py",
-            "commandWindows": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File .codex/hooks/run_python.ps1 .codex/hooks/quality_receipt_gate.py",
+            "commandWindows": "powershell.exe -NoProfile -ExecutionPolicy Bypass -Command \"& (Join-Path ((git rev-parse --show-toplevel).Trim()) '.codex/hooks/run_from_git_root.ps1') 'quality_receipt_gate.py'; exit $LASTEXITCODE\"",
             "timeout": 10
           }
         ]
@@ -76,13 +76,13 @@
           {
             "type": "command",
             "command": "python .codex/hooks/post_srs.py",
-            "commandWindows": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File .codex/hooks/run_python.ps1 .codex/hooks/post_srs.py",
+            "commandWindows": "powershell.exe -NoProfile -ExecutionPolicy Bypass -Command \"& (Join-Path ((git rev-parse --show-toplevel).Trim()) '.codex/hooks/run_from_git_root.ps1') 'post_srs.py'; exit $LASTEXITCODE\"",
             "timeout": 25
           },
           {
             "type": "command",
             "command": "python .codex/hooks/flag_aggregator.py",
-            "commandWindows": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File .codex/hooks/run_python.ps1 .codex/hooks/flag_aggregator.py",
+            "commandWindows": "powershell.exe -NoProfile -ExecutionPolicy Bypass -Command \"& (Join-Path ((git rev-parse --show-toplevel).Trim()) '.codex/hooks/run_from_git_root.ps1') 'flag_aggregator.py'; exit $LASTEXITCODE\"",
             "timeout": 30
           }
         ]
