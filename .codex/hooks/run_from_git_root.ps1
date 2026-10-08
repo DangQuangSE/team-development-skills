@@ -13,25 +13,16 @@ if ([IO.Path]::IsPathRooted($ScriptName) -or
     exit 2
 }
 
-$root = ((& git rev-parse --show-toplevel 2>$null) | Select-Object -First 1)
-if ($null -eq $root) {
-    [Console]::Error.WriteLine("Could not determine the git repository root for Codex hook.")
-    exit 128
-}
-$root = $root.ToString().Trim()
-if ([string]::IsNullOrWhiteSpace($root)) {
-    [Console]::Error.WriteLine("Could not determine the git repository root for Codex hook.")
-    exit 128
-}
-
-$runner = Join-Path $root ".codex/hooks/run_python.ps1"
-$script = Join-Path $root (Join-Path ".codex/hooks" $ScriptName)
+$hookDirectory = $PSScriptRoot
+$workspaceRoot = Split-Path -Parent (Split-Path -Parent $hookDirectory)
+$runner = Join-Path $hookDirectory "run_python.ps1"
+$script = Join-Path $hookDirectory $ScriptName
 if (-not (Test-Path -LiteralPath $runner -PathType Leaf) -or
     -not (Test-Path -LiteralPath $script -PathType Leaf)) {
-    [Console]::Error.WriteLine("Codex hook script was not found under the repository root.")
+    [Console]::Error.WriteLine("Codex hook script was not found beside the hook runner.")
     exit 127
 }
 
-Set-Location -LiteralPath $root
+Set-Location -LiteralPath $workspaceRoot
 & $runner $script
 exit $LASTEXITCODE
